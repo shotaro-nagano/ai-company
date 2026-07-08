@@ -11,6 +11,8 @@
 """
 import json
 import os
+import shutil
+import subprocess
 import sys
 import time
 import urllib.error
@@ -117,15 +119,66 @@ def main():
         )
     print(f"\n✅ state/discord_channels.json を更新しました(承認待ち/社長室のID)")
 
-    print("\n" + "=" * 60)
-    print("【GitHub Secrets に登録する6本】")
-    print("https://github.com/shotaro-nagano/ai-company/settings/secrets/actions")
-    print("を開き、下の Name / Secret のペアを『New repository secret』で1つずつ登録:\n")
-    for name, url in webhook_lines:
-        print(f"  Name  : {name}")
-        print(f"  Secret: {url}\n")
-    print("=" * 60)
-    print("↑のURL(webhook)は秘密情報です。GitHubに貼ったら、この画面は閉じてください。")
+    # --- GitHub Secrets へ直接登録(手コピペを避け、混入ゼロにする) ---
+    repo = detect_repo()
+    if shutil.which("gh") and repo:
+        print("\n" + "=" * 60)
+        print(f"gh 経由で GitHub Secrets に直接登録します(repo: {repo})")
+        ok = True
+        for name, url in webhook_lines:
+            if set_secret(repo, name, url):
+                print(f"  ✅ {name} を登録")
+            else:
+                ok = False
+                print(f"  ❌ {name} の登録に失敗")
+        # Botトークンもクリーンに登録(ポーリング用)
+        if set_secret(repo, "DISCORD_BOT_TOKEN", token.strip()):
+            print("  ✅ DISCORD_BOT_TOKEN を登録")
+        else:
+            ok = False
+            print("  ❌ DISCORD_BOT_TOKEN の登録に失敗")
+        print("=" * 60)
+        if ok:
+            print("✅ Discordの認証情報をすべてクリーンに登録しました。手コピペは不要です。")
+        else:
+            print("⚠️ 一部失敗。gh が repo にアクセスできるか確認してください(gh auth status)。")
+    else:
+        # gh が無い場合は従来どおり表示(手動登録のフォールバック)
+        print("\n" + "=" * 60)
+        print("【GitHub Secrets に登録する6本】(gh が見つからないため手動登録)")
+        print(f"https://github.com/{repo or 'shotaro-nagano/ai-company'}/settings/secrets/actions")
+        for name, url in webhook_lines:
+            print(f"  Name  : {name}\n  Secret: {url}\n")
+        print("  Name  : DISCORD_BOT_TOKEN\n  Secret: (あなたのBotトークン)")
+        print("=" * 60)
+
+
+def detect_repo() -> str:
+    """git remote から owner/repo を推定する。"""
+    try:
+        url = subprocess.check_output(
+            ["git", "remote", "get-url", "origin"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        return ""
+    # https://github.com/owner/repo.git or git@github.com:owner/repo.git
+    url = url.replace("git@github.com:", "").replace("https://github.com/", "")
+    return url[:-4] if url.endswith(".git") else url
+
+
+def set_secret(repo: str, name: str, value: str) -> bool:
+    """gh secret set NAME --repo repo に value を stdin で渡す(改行除去済み)。"""
+    value = value.replace("\r", "").replace("\n", "").strip()
+    try:
+        p = subprocess.run(
+            ["gh", "secret", "set", name, "--repo", repo],
+            input=value,
+            text=True,
+            capture_output=True,
+        )
+        return p.returncode == 0
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

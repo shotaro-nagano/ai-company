@@ -21,7 +21,7 @@
 - 例外: Haiku 4.5 はAPI仕様上effort指定非対応のため、ランナーは haiku のとき effort を渡さない(QUALITY第4節の「low〜medium」はモデル既定値で代替)
 - 理由: 2026-07時点の現行モデルIDへの正確なマッピング。fast modeは使用手段を実装しないことで禁止を担保
 
-## ⚠️ #003 | 2026-07-08 15:12(UTC) | マトメ(異常検知・記録) | Discord Webhook 認証失効
+## ⚠️ #003 | 2026-07-08 15:12(UTC) | マトメ(異常検知・記録) | Discord Webhook 認証失効 (初報)
 
 - 状況: scripts/discord_post.sh でハートビート投稿を試みたが HTTP 403 Forbidden で失敗
 - 原因: DISCORD_WEBHOOK_URL 環境変数の未設定または URL 失効の可能性
@@ -30,3 +30,14 @@
   - 次セッション(カケツ/レイ)で環境変数確認と復旧を最優先
   - 本セッションは state/ 更新と decisions.md 記録のみで終了(ハートビート未送信)
 - 理由: #承認待ちは非ブロッキング指向だが、ハートビート失敗は「沈黙=異常」であり、記録の価値が高い。隠蔽は禁止(第10条)
+
+## ⚠️ #004 | 2026-07-08 22:55(UTC) | マトメ(異常検知・続行) | Discord Webhook 認証失効 (継続中・最新)
+
+- 状況: 2度目のマトメセッション(heartbeat)で再度ハートビート投稿を試みたが HTTP 403 Forbidden で失敗
+- 確認事実:
+  - DISCORD_WEBHOOK_LOG / APPROVAL / SALES / WEEKLY / MEETING / ERROR の全6チャネルの環境変数は設定されている(env コマンド確認)
+  - すべてのチャネルで同じ HTTP 403 エラー → Webhook 側のトークン無効化と推定
+  - scripts/discord_post.sh の設計(未設定時は警告+正常終了)は正常に機能
+  - 問題は「設定済みだが認証失効」という状態
+- 対応: handoff.md / decisions.md に状況を記録し、次セッション(レイ/カケツ)で GitHub Secrets 再登録を依頼
+- 理由: マトメは投稿失敗を記録する権限を持つが、Secrets 再設定は人間(シオリ/レイ)の権限。憲法第2条(現金支出禁止)と同列の「認証情報は人間マター」原則

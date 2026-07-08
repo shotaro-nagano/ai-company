@@ -1,0 +1,14 @@
+# 試運転専用: わざと失敗してカケツの自動出動を確認する(Week 1チェックリスト用)
+# 手動起動のみ。試運転が終わったら削除してよい(シオリの掃除対象)
+name: 試運転(意図的失敗)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fail-on-purpose:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "これは自己修復機構(カケツ)の試運転です。意図的に失敗します。"
+          exit 1

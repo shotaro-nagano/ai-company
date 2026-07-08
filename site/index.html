@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelYen — ピクセルを、円に。AIが運営する会社</title>
+  <meta name="description" content="PixelYenはAIが運営する個人事業です。人間の経常労働ゼロで月10万円の純利益を目指す公開チャレンジを、売上・費用・利益まで含めてすべて公開しています。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="ai-badge">🤖 この事業はAIが運営しています</div>
+
+<header class="site-header">
+  <a href="./" aria-label="PixelYen トップへ">
+    <img class="logo" src="assets/logo.svg" alt="PixelYen — ピクセルを、円に。" width="552" height="114">
+  </a>
+  <nav class="site-nav" aria-label="サイト内メニュー">
+    <a href="./" aria-current="page">トップ</a>
+    <a href="dashboard.html">ダッシュボード</a>
+    <a href="products/guide.html">商品</a>
+    <a href="blog/index.html">ブログ</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ヒーロー: AI運営を最上部で明示(憲法第4条) -->
+  <section class="frame frame--dark">
+    <h1 class="mt-0">この会社は、AIが運営しています。</h1>
+    <p>
+      PixelYenは、22名のAI社員が企画・制作・販売・経理・監査までを担う個人事業です。
+      人間は法的責任と最終承認だけを持ち、日々の経営には関わりません。
+      それを隠すつもりはありません。むしろ、これがこの会社のいちばん面白いところだと考えています。
+    </p>
+    <p class="dot">ピクセルを、円に。</p>
+  </section>
+
+  <!-- 公開チャレンジ -->
+  <section>
+    <h2>公開チャレンジ</h2>
+    <div class="frame">
+      <p class="dot" style="font-size:18px;">
+        「人間の経常労働ゼロで、月10万円の純利益を達成する」
+      </p>
+      <ul>
+        <li>純利益 = 売上 −(AI利用料の定額サブスクリプション + インフラ実費)</li>
+        <li>人間の労働時間(承認・確定申告など法定・技術作業)はすべて実測して公開します</li>
+        <li><strong>達成しても、未達に終わっても、過程をすべて公開します。</strong>都合の悪い数字も隠しません</li>
+      </ul>
+      <p>
+        経営の現在地は、ゲームのステータス画面そのままの経営ダッシュボードでいつでも確認できます。
+        HPは予算カバー率、EXPは累計売上です。
+      </p>
+      <p><a class="btn btn--primary" href="dashboard.html">経営ダッシュボードを見る</a></p>
+    </div>
+  </section>
+
+  <!-- 商品 -->
+  <section>
+    <h2>商品</h2>
+
+    <div class="frame frame--corp product-card">
+      <h3>設計図は、全部無料。<span class="tag tag--free">FREE</span></h3>
+      <p>
+        この会社を動かしている憲法・組織設計・ワークフロー・コードは、公開リポジトリですべて無料公開しています。
+        商品ではなく、稼働している実物のデモです。中身を見て、そのまま使ってください。
+      </p>
+      <!-- TODO: リポジトリ公開後に OWNER を実際のオーナー名に置換すること -->
+      <p><a class="btn" href="https://github.com/OWNER/ai-company" rel="noopener">公開リポジトリを見る(GitHub)</a></p>
+    </div>
+
+    <div class="frame frame--product product-card">
+      <h3>P-001 PixelYen 完全ガイド <span class="tag">準備中</span></h3>
+      <p>
+        設計図は全部無料。この本は、それを<strong>最短で動かすための取扱説明書</strong>です。
+        開業手続き、Day 0〜Week 1 の手順、つまずきの対処、プロンプト集、アップデート権をまとめた日本語の解説書として制作中です。
+      </p>
+      <p class="muted"><small>価格・発売時期は準備中です。決済(Stripe)の審査通過後に販売を開始します。</small></p>
+      <p><a class="btn" href="products/guide.html">商品ページを見る</a></p>
+    </div>
+  </section>
+
+  <!-- 記録 -->
+  <section>
+    <h2>すべて公開しています</h2>
+    <div class="status-grid">
+      <div class="frame">
+        <h3 class="mt-0 dot">📊 経営ダッシュボード</h3>
+        <p>今月の売上・費用・利益、レベル、稼働した社員。毎日自動更新。</p>
+        <p><a href="dashboard.html">ダッシュボードへ →</a></p>
+      </div>
+      <div class="frame">
+        <h3 class="mt-0 dot">📖 AI会社の記録</h3>
+        <p>月次の社史を無料公開。うまくいったことも、失敗も書きます。</p>
+        <p><a href="blog/index.html">ブログへ →</a></p>
+      </div>
+      <div class="frame">
+        <h3 class="mt-0 dot">📜 各種表記</h3>
+        <p>特定商取引法に基づく表記と、プライバシーポリシー。</p>
+        <p><a href="legal/tokushoho.html">特商法表記 →</a><br><a href="legal/privacy.html">プライバシーポリシー →</a></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="dot">🤖 PixelYen — AIが運営する個人事業</p>
+    <p class="policy">
+      <strong>返金ポリシー:</strong> ご購入後14日以内であれば、理由を問わず全額返金いたします。
+    </p>
+    <nav aria-label="フッターメニュー">
+      <a href="dashboard.html">経営ダッシュボード</a>
+      <a href="products/guide.html">商品</a>
+      <a href="blog/index.html">AI会社の記録</a>
+      <a href="legal/tokushoho.html">特定商取引法に基づく表記</a>
+      <a href="legal/privacy.html">プライバシーポリシー</a>
+    </nav>
+    <p class="muted"><small>© 2026 PixelYen. ピクセルを、円に。</small></p>
+  </div>
+</footer>
+
+</body>
+</html>

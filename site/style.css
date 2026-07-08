@@ -1,0 +1,273 @@
+/* ============================================================
+   PixelYen 共通スタイル — BRAND.md 完全準拠
+   カラーは8色系統+部門淡色のみ。
+   本文=現代フォント(system-ui系) / 見出しのみ DotGothic16
+   ============================================================ */
+
+:root {
+  /* 8色系統(BRAND.md) */
+  --ink:      #1A1C2C; /* インク(線・文字) */
+  --paper:    #F4EFDE; /* 地(背景) */
+  --gold:     #FFC825; /* 金貨イエロー: 売上・利益の数字だけに使う */
+  --sky:      #41A6F6; /* プロダクト部 */
+  --akane:    #E64539; /* グロース部 */
+  --wakakusa: #38B764; /* コーポレート部 */
+  --fuji:     #7B5FB5; /* 監査役 */
+  /* 部門淡色 */
+  --pale-mgmt:    #FBEEC8;
+  --pale-product: #D9EDFD;
+  --pale-growth:  #FBDCD8;
+  --pale-corp:    #D8F2E2;
+  --pale-audit:   #E7E0F4;
+
+  --font-body: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+               "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
+  --font-dot: "DotGothic16", "Hiragino Kaku Gothic ProN", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.8;
+  font-size: 16px;
+}
+
+h1, h2, h3, h4, .dot {
+  font-family: var(--font-dot);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+}
+
+a { color: var(--ink); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:hover { color: var(--sky); }
+
+img { max-width: 100%; height: auto; }
+
+/* ドット絵は整数倍拡大・にじみ禁止 */
+.pixel-art, .avatar img, .logo {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ---------- AI運営バッジ(全ページ共通・最上部) ---------- */
+.ai-badge {
+  background: var(--ink);
+  color: var(--paper);
+  text-align: center;
+  padding: 8px 16px;
+  font-family: var(--font-dot);
+  font-size: 14px;
+}
+.ai-badge a { color: var(--paper); }
+
+/* ---------- ヘッダー ---------- */
+.site-header {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.site-header .logo { width: 276px; max-width: 100%; display: block; }
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-family: var(--font-dot);
+  font-size: 15px;
+}
+.site-nav a { text-decoration: none; padding: 4px 2px; border-bottom: 3px solid transparent; }
+.site-nav a:hover, .site-nav a[aria-current="page"] { border-bottom-color: var(--gold); color: var(--ink); }
+
+main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+section { margin: 40px 0; }
+
+h1 { font-size: clamp(24px, 5vw, 36px); margin-bottom: 16px; }
+h2 { font-size: clamp(20px, 4vw, 26px); margin: 32px 0 16px; padding-left: 14px; border-left: 10px solid var(--ink); }
+h3 { font-size: 18px; margin: 24px 0 8px; }
+p, ul, ol, table { margin-bottom: 14px; }
+ul, ol { padding-left: 1.4em; }
+small { font-size: 13px; }
+
+/* ---------- レトロゲームUIの枠(太枠+角の欠け) ---------- */
+.frame {
+  border: 4px solid var(--ink);
+  background: var(--paper);
+  padding: 20px;
+  clip-path: polygon(
+    0 8px, 8px 8px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+}
+.frame--dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.frame--dark a { color: var(--paper); }
+.frame--mgmt    { background: var(--pale-mgmt); }
+.frame--product { background: var(--pale-product); }
+.frame--growth  { background: var(--pale-growth); }
+.frame--corp    { background: var(--pale-corp); }
+.frame--audit   { background: var(--pale-audit); }
+
+/* ---------- ボタン ---------- */
+.btn {
+  display: inline-block;
+  font-family: var(--font-dot);
+  font-size: 16px;
+  padding: 10px 22px;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 0.05s, box-shadow 0.05s;
+}
+.btn:hover { color: var(--ink); transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.btn--primary { background: var(--sky); }
+.btn--audit { background: var(--pale-audit); }
+.btn:disabled, .btn[disabled] {
+  background: var(--pale-mgmt);
+  color: var(--ink);
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ---------- ステータス画面(ゲームUI) ---------- */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.statbar { margin: 14px 0; }
+.statbar__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-dot);
+  font-size: 15px;
+  gap: 8px;
+}
+.statbar__track {
+  height: 22px;
+  border: 3px solid var(--paper);
+  background: var(--ink);
+  padding: 2px;
+  margin-top: 4px;
+}
+.statbar__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--wakakusa);
+  transition: width 0.8s steps(12);
+}
+.statbar__fill--hp   { background: var(--wakakusa); }
+.statbar__fill--hp.is-low { background: var(--akane); }
+.statbar__fill--exp  { background: var(--sky); }
+.statbar__fill--usage { background: var(--fuji); }
+.statbar__fill--usage.is-warn { background: var(--akane); }
+
+/* 売上・利益の数字だけ金貨イエローで光らせる(BRAND.md) */
+.num-gold {
+  font-family: var(--font-dot);
+  color: var(--gold);
+  text-shadow: 0 0 6px rgba(255, 200, 37, 0.6), 0 0 16px rgba(255, 200, 37, 0.35);
+  font-size: 1.5em;
+  white-space: nowrap;
+}
+.num-plain { font-family: var(--font-dot); font-size: 1.5em; white-space: nowrap; }
+
+.kpi-row { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 12px 0; }
+.kpi { min-width: 130px; }
+.kpi dt { font-size: 13px; opacity: 0.85; }
+.kpi dd { margin: 0; }
+
+.lv-chip {
+  display: inline-block;
+  font-family: var(--font-dot);
+  border: 3px solid var(--paper);
+  padding: 2px 12px;
+  font-size: 18px;
+}
+
+/* ---------- パーティ(社員アバター) ---------- */
+.party-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+.avatar { text-align: center; }
+.avatar img {
+  width: 64px;  /* 32px原寸の2倍(整数倍) */
+  height: 64px;
+  display: inline-block;
+  border: 3px solid var(--ink);
+}
+.avatar .avatar__name { font-family: var(--font-dot); font-size: 13px; display: block; margin-top: 4px; }
+.avatar .avatar__role { font-size: 11px; opacity: 0.8; display: block; }
+.frame--dark .avatar img { border-color: var(--paper); }
+
+/* ---------- 商品カード ---------- */
+.product-card { margin: 20px 0; }
+.product-card h3 { margin-top: 0; }
+.tag {
+  display: inline-block;
+  font-family: var(--font-dot);
+  font-size: 13px;
+  border: 2px solid var(--ink);
+  padding: 1px 10px;
+  margin-left: 8px;
+  vertical-align: middle;
+  background: var(--pale-mgmt);
+}
+.tag--free { background: var(--pale-corp); }
+
+/* ---------- 表 ---------- */
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 2px solid var(--ink); padding: 8px 12px; text-align: left; vertical-align: top; }
+th { background: var(--pale-product); font-family: var(--font-dot); font-weight: 400; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- フッター ---------- */
+.site-footer {
+  border-top: 4px solid var(--ink);
+  margin-top: 48px;
+  padding: 24px 16px 40px;
+}
+.site-footer__inner { max-width: 960px; margin: 0 auto; }
+.site-footer nav { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 10px 0; font-size: 14px; }
+.site-footer .policy { font-size: 14px; }
+
+/* ---------- ユーティリティ ---------- */
+.muted { opacity: 0.8; }
+.center { text-align: center; }
+.mt-0 { margin-top: 0; }
+.notice {
+  border: 3px dashed var(--ink);
+  background: var(--pale-mgmt);
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+/* ---------- レスポンシブ ---------- */
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .site-header { justify-content: center; text-align: center; }
+  .site-header .logo { width: 240px; }
+  .frame { padding: 16px 14px; }
+  .kpi-row { gap: 12px 20px; }
+}

@@ -1,0 +1,35 @@
+# Discordアバター書き出し — SVG → 512×512 PNG(BRAND.md準拠・整数倍)
+# 初回セットアップ時と、アバターSVGが更新されたときに実行する
+name: アバター書き出し
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [assets/avatars/**]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pixelyen-avatars
+  cancel-in-progress: true
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: rsvg-convert をインストール
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin
+      - name: PNG書き出し
+        run: bash scripts/export_avatars.sh
+      - name: コミット
+        run: |
+          git config user.name "PixelYen"
+          git config user.email "pixelyen-bot@users.noreply.github.com"
+          git add assets/discord
+          git diff --cached --quiet || git commit -m "イロハ: Discordアバター(512px PNG)を書き出し"
+          git pull --rebase origin main || true
+          git push origin main

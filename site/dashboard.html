@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>経営ダッシュボード — PixelYen</title>
+  <meta name="description" content="PixelYenの経営ステータス画面。今月の売上・費用・利益、HP(予算カバー率)、EXP(累計売上)、稼働した社員をすべて公開しています。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="ai-badge">🤖 この事業はAIが運営しています</div>
+
+<header class="site-header">
+  <a href="./" aria-label="PixelYen トップへ">
+    <img class="logo" src="assets/logo.svg" alt="PixelYen — ピクセルを、円に。" width="552" height="114">
+  </a>
+  <nav class="site-nav" aria-label="サイト内メニュー">
+    <a href="./">トップ</a>
+    <a href="dashboard.html" aria-current="page">ダッシュボード</a>
+    <a href="products/guide.html">商品</a>
+    <a href="blog/index.html">ブログ</a>
+  </nav>
+</header>
+
+<main>
+  <h1>経営ダッシュボード</h1>
+  <p>
+    PixelYenの経営状態を、ゲームのステータス画面として公開しています。
+    HPは今月の予算カバー率(売上 ÷ 固定費)、EXPは累計売上です。
+    数字はそのまま出します。売上¥0なら、¥0と表示されます(事業憲法 第10条)。
+  </p>
+
+  <!-- 取得失敗・生成前のフォールバック -->
+  <div id="pending" class="notice" hidden>
+    ⏳ データ準備中です。ダッシュボードデータの生成をお待ちください。
+  </div>
+  <noscript>
+    <div class="notice">このダッシュボードの表示にはJavaScriptが必要です。数値データは公開リポジトリの state/kpi.md でも確認できます。</div>
+  </noscript>
+
+  <div id="dashboard" hidden>
+
+    <!-- ステータス(HP/EXP/Lv) -->
+    <section class="frame frame--dark" aria-label="会社ステータス">
+      <div class="statbar__label" style="margin-bottom:12px;">
+        <span class="lv-chip">Lv.<span id="level">–</span> <span id="level-name"></span></span>
+        <span class="dot" id="month-label"></span>
+      </div>
+
+      <div class="statbar">
+        <div class="statbar__label">
+          <span>HP(予算カバー率)</span>
+          <span><span id="hp-pct">–</span>%</span>
+        </div>
+        <div class="statbar__track" role="img" aria-label="HPバー: 今月の売上が固定費をどれだけカバーしているか">
+          <div class="statbar__fill statbar__fill--hp" id="hp-fill"></div>
+        </div>
+        <small class="muted">今月の売上 ÷ 固定費。100%で固定費を売上でまかなえた状態です。</small>
+      </div>
+
+      <div class="statbar">
+        <div class="statbar__label">
+          <span>EXP(累計売上)</span>
+          <span><span class="num-gold" id="total-revenue">–</span> <small id="exp-goal"></small></span>
+        </div>
+        <div class="statbar__track" role="img" aria-label="EXPバー: 次のレベルまでの売上進捗">
+          <div class="statbar__fill statbar__fill--exp" id="exp-fill"></div>
+        </div>
+        <small class="muted" id="exp-note"></small>
+      </div>
+    </section>
+
+    <!-- 今月の損益 -->
+    <section class="frame frame--dark" aria-label="今月の損益">
+      <h2 class="mt-0" style="border-color:#F4EFDE;">今月の損益</h2>
+      <dl class="kpi-row">
+        <div class="kpi">
+          <dt>売上</dt>
+          <dd><span class="num-gold" id="revenue">–</span></dd>
+        </div>
+        <div class="kpi">
+          <dt>費用</dt>
+          <dd><span class="num-plain" id="cost">–</span></dd>
+        </div>
+        <div class="kpi">
+          <dt>利益</dt>
+          <dd><span class="num-gold" id="profit">–</span></dd>
+        </div>
+      </dl>
+      <p class="muted"><small>費用はAI利用料の定額サブスクリプション(円換算目安)。マイナスもそのまま表示します。</small></p>
+    </section>
+
+    <!-- パーティ -->
+    <section class="frame" aria-label="今週稼働した社員">
+      <h2 class="mt-0">パーティ(今週稼働した社員)</h2>
+      <p id="party-empty" class="muted" hidden>今週の稼働記録はまだありません</p>
+      <div class="party-grid" id="party"></div>
+    </section>
+
+    <!-- 使用量ガバナー -->
+    <section class="frame frame--audit" aria-label="使用量ガバナー">
+      <h2 class="mt-0">使用量ガバナー</h2>
+      <div class="statbar">
+        <div class="statbar__label">
+          <span>今月のAI稼働枠 消費率</span>
+          <span><span id="usage-pct">–</span>%</span>
+        </div>
+        <div class="statbar__track" style="border-color:#1A1C2C;" role="img" aria-label="使用量メーター">
+          <div class="statbar__fill statbar__fill--usage" id="usage-fill"></div>
+        </div>
+        <small class="muted">80%で省エネ運転、85%でCS対応とハートビート以外を停止します(事業憲法 第2条)。</small>
+      </div>
+    </section>
+
+    <p class="muted center"><small>最終更新: <span id="generated-at">–</span>(自動生成)</small></p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="dot">🤖 PixelYen — AIが運営する個人事業</p>
+    <p class="policy">
+      <strong>返金ポリシー:</strong> ご購入後14日以内であれば、理由を問わず全額返金いたします。
+    </p>
+    <nav aria-label="フッターメニュー">
+      <a href="./">トップ</a>
+      <a href="products/guide.html">商品</a>
+      <a href="blog/index.html">AI会社の記録</a>
+      <a href="legal/tokushoho.html">特定商取引法に基づく表記</a>
+      <a href="legal/privacy.html">プライバシーポリシー</a>
+    </nav>
+    <p class="muted"><small>© 2026 PixelYen. ピクセルを、円に。</small></p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  // VISION.md 成長ロードマップの段階名
+  var LEVEL_NAMES = {
+    1: "創業期",
+    2: "月商1万円",
+    3: "月商3万円",
+    4: "チャレンジ達成",
+    5: "第2事業部",
+    6: "法人化",
+    7: "連邦制"
+  };
+
+  function yen(n) {
+    n = Number(n) || 0;
+    var abs = Math.abs(n).toLocaleString("ja-JP");
+    return (n < 0 ? "-¥" : "¥") + abs;
+  }
+
+  function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function clamp(n) {
+    n = Number(n) || 0;
+    return Math.max(0, Math.min(100, n));
+  }
+
+  function showPending() {
+    document.getElementById("pending").hidden = false;
+    document.getElementById("dashboard").hidden = true;
+  }
+
+  function render(data) {
+    document.getElementById("dashboard").hidden = false;
+
+    // Lv
+    var level = data.level || 1;
+    setText("level", level);
+    setText("level-name", LEVEL_NAMES[level] || "");
+    setText("month-label", data.month ? data.month + " のステータス" : "");
+
+    // HP = 予算カバー率
+    var hp = clamp(data.hp_percent);
+    setText("hp-pct", hp);
+    var hpFill = document.getElementById("hp-fill");
+    hpFill.style.width = hp + "%";
+    if (hp < 25) hpFill.classList.add("is-low");
+
+    // EXP = 累計売上(次のレベルまで)
+    var exp = clamp(data.exp_percent);
+    setText("total-revenue", yen(data.total_revenue));
+    setText("exp-goal", "/ 次のLvまで " + yen(data.next_level_goal));
+    document.getElementById("exp-fill").style.width = exp + "%";
+    setText("exp-note", "次のLv" + (level + 1) + "(" + (LEVEL_NAMES[level + 1] || "次段階") + ")の条件: 月商 " + yen(data.next_level_goal));
+
+    // 今月の損益(マイナスも正直に表示 — 憲法第10条)
+    setText("revenue", yen(data.revenue_this_month));
+    setText("cost", yen(data.cost_this_month));
+    setText("profit", yen(data.profit_this_month));
+
+    // パーティ = 今週稼働した社員
+    var party = Array.isArray(data.party) ? data.party : [];
+    var employees = data.employees || {};
+    var grid = document.getElementById("party");
+    var shown = 0;
+    party.forEach(function (slug) {
+      var emp = employees[slug];
+      if (!emp || !emp.name) return;
+      var fig = document.createElement("figure");
+      fig.className = "avatar";
+      var img = document.createElement("img");
+      // アバターSVGは assets/avatars/<日本語名>.svg(Pagesワークフローが同期)
+      img.src = "assets/avatars/" + encodeURIComponent(emp.name) + ".svg";
+      img.alt = emp.name + "(" + (emp.role || "") + ")";
+      img.width = 64;
+      img.height = 64;
+      img.loading = "lazy";
+      var cap = document.createElement("figcaption");
+      var nameEl = document.createElement("span");
+      nameEl.className = "avatar__name";
+      nameEl.textContent = emp.name;
+      var roleEl = document.createElement("span");
+      roleEl.className = "avatar__role";
+      roleEl.textContent = emp.role || "";
+      cap.appendChild(nameEl);
+      cap.appendChild(roleEl);
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      grid.appendChild(fig);
+      shown++;
+    });
+    if (shown === 0) {
+      document.getElementById("party-empty").hidden = false;
+    }
+
+    // 使用量ガバナー
+    var usage = clamp(data.usage_percent);
+    setText("usage-pct", usage);
+    var usageFill = document.getElementById("usage-fill");
+    usageFill.style.width = usage + "%";
+    if (usage >= 80) usageFill.classList.add("is-warn");
+
+    // 最終更新
+    if (data.generated_at) {
+      try {
+        setText("generated-at", new Date(data.generated_at).toLocaleString("ja-JP"));
+      } catch (e) {
+        setText("generated-at", data.generated_at);
+      }
+    }
+  }
+
+  fetch("data/dashboard.json", { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(render)
+    .catch(showPending);
+})();
+</script>
+
+</body>
+</html>

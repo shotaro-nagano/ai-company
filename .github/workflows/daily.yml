@@ -1,0 +1,48 @@
+# 常勤セッション(毎日)— 稼働表: レイ / ツクル / ヒカリ(常勤)、マトメ / ヒロメ(毎日・軽量)
+# cronはUTC。JST = UTC+9
+name: 常勤セッション
+
+on:
+  schedule:
+    - cron: '0 22 * * *'   # マトメ 07:00 JST(ハートビート)
+    - cron: '0 0 * * *'    # レイ   09:00 JST
+    - cron: '30 1 * * *'   # ツクル 10:30 JST
+    - cron: '0 4 * * *'    # ヒカリ 13:00 JST
+    - cron: '0 6 * * *'    # ヒロメ 15:00 JST
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: '社員slug(手動起動用)'
+        required: true
+        type: choice
+        options: [matome, rei, tsukuru, hikari, hirome]
+      task:
+        description: '追加タスク(任意)'
+        required: false
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    outputs:
+      slug: ${{ steps.pick.outputs.slug }}
+      class: ${{ steps.pick.outputs.class }}
+    steps:
+      - id: pick
+        run: |
+          case "${{ github.event.schedule }}" in
+            '0 22 * * *') echo "slug=matome" >> $GITHUB_OUTPUT; echo "class=heartbeat" >> $GITHUB_OUTPUT ;;
+            '0 0 * * *')  echo "slug=rei" >> $GITHUB_OUTPUT; echo "class=daily" >> $GITHUB_OUTPUT ;;
+            '30 1 * * *') echo "slug=tsukuru" >> $GITHUB_OUTPUT; echo "class=daily" >> $GITHUB_OUTPUT ;;
+            '0 4 * * *')  echo "slug=hikari" >> $GITHUB_OUTPUT; echo "class=daily" >> $GITHUB_OUTPUT ;;
+            '0 6 * * *')  echo "slug=hirome" >> $GITHUB_OUTPUT; echo "class=daily" >> $GITHUB_OUTPUT ;;
+            '') echo "slug=${{ inputs.slug }}" >> $GITHUB_OUTPUT; echo "class=daily" >> $GITHUB_OUTPUT ;;
+          esac
+
+  run:
+    needs: route
+    uses: ./.github/workflows/_session.yml
+    secrets: inherit
+    with:
+      slug: ${{ needs.route.outputs.slug }}
+      class: ${{ needs.route.outputs.class }}
+      task: ${{ inputs.task || '' }}

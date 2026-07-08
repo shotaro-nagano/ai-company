@@ -1,0 +1,26 @@
+# イベント起動セッション — メキキ / イロハ / ツヅリ / ワタル / オキテ / マメ / カケツ
+# 他セッションが scripts/dispatch_colleague.sh で repository_dispatch を送ると起動する
+name: イベントセッション
+
+on:
+  repository_dispatch:
+    types: [session]
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: '社員slug'
+        required: true
+        type: choice
+        options: [mekiki, iroha, tsuzuri, wataru, okite, mame, kaketsu]
+      task:
+        description: '依頼内容'
+        required: true
+
+jobs:
+  run:
+    uses: ./.github/workflows/_session.yml
+    secrets: inherit
+    with:
+      slug: ${{ github.event.client_payload.slug || inputs.slug }}
+      class: event
+      task: ${{ github.event.client_payload.task || inputs.task }}

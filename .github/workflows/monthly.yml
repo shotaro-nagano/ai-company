@@ -1,0 +1,62 @@
+# 月次セッション — メツケ監査(1日)/ 全体会議(2日)/ 進化会議(15日)/ カタリベ(28日)
+# QUALITY第4節: 進化会議・メツケ監査 = Opus 4.8 / xhigh
+name: 月次セッション
+
+on:
+  schedule:
+    - cron: '0 1 1 * *'    # メツケ監査 毎月1日 10:00 JST
+    - cron: '0 1 2 * *'    # 全体会議   毎月2日 10:00 JST(レイが議長)
+    - cron: '0 1 15 * *'   # 進化会議   毎月15日 10:00 JST(レイ・ヒラメキ・シオリ・ヤリクリ)
+    - cron: '0 1 28 * *'   # カタリベ   毎月28日 10:00 JST(社史)
+  workflow_dispatch:
+    inputs:
+      session:
+        description: 'セッション種別(手動起動用)'
+        required: true
+        type: choice
+        options: [metsuke, zentai-kaigi, shinka-kaigi, kataribe]
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    outputs:
+      slug: ${{ steps.pick.outputs.slug }}
+      task: ${{ steps.pick.outputs.task }}
+      effort: ${{ steps.pick.outputs.effort }}
+      model: ${{ steps.pick.outputs.model }}
+    steps:
+      - id: pick
+        run: |
+          case "${{ github.event.schedule }}${{ inputs.session }}" in
+            '0 1 1 * *'|*metsuke*)
+              echo "slug=metsuke" >> $GITHUB_OUTPUT
+              echo "task=月次監査を実施する。全ログ(state/・decisions.md・直近のコミット履歴・workflows)を監査し、憲法違反・QUALITY基準からの逸脱(手抜きプロンプト・レビュー省略・申し送り欠落)・異常を、CEOを経由せず人間に直接報告する(#承認待ちレーンに掲示。scripts/discord_post.sh metsuke approval を使用)" >> $GITHUB_OUTPUT
+              echo "effort=xhigh" >> $GITHUB_OUTPUT
+              echo "model=claude-opus-4-8" >> $GITHUB_OUTPUT ;;
+            '0 1 2 * *'|*zentai-kaigi*)
+              echo "slug=rei" >> $GITHUB_OUTPUT
+              echo "task=月次全体会議を開催する。全社員22名のロールプロンプトとstate/を読み、月次総括の議事録をターン制で作成する。少数意見も記録。議事録は #経営会議 へ投稿し、decisions.md に月次総括を記録する" >> $GITHUB_OUTPUT
+              echo "effort=high" >> $GITHUB_OUTPUT
+              echo "model=claude-opus-4-8" >> $GITHUB_OUTPUT ;;
+            '0 1 15 * *'|*shinka-kaigi*)
+              echo "slug=rei" >> $GITHUB_OUTPUT
+              echo "task=進化会議を開催する(憲法第9条)。参加者=レイ・ヒラメキ・シオリ・ヤリクリ(各ロールプロンプトを読み込みターン制で審議)。自社のプロンプト・業務フロー・組織・憲法の改善案を審議する。プロンプト/フロー改善は決議で実施し #作業ログ へ事後報告。憲法・組織の変更案は #承認待ち へ掲示(非ブロッキング)。全変更を「変更前・変更後・理由」付きで decisions.md へ記録。うまくいったやり方の skills/ 昇格も審議する" >> $GITHUB_OUTPUT
+              echo "effort=xhigh" >> $GITHUB_OUTPUT
+              echo "model=claude-opus-4-8" >> $GITHUB_OUTPUT ;;
+            '0 1 28 * *'|*kataribe*)
+              echo "slug=kataribe" >> $GITHUB_OUTPUT
+              echo "task=今月の社史を執筆する。数字の裏のドラマ・決断・失敗を物語として site/blog/ に月次記事として追加し、公開リポにも残す(VISION: 月次社史の無料公開。失敗も書く)" >> $GITHUB_OUTPUT
+              echo "effort=" >> $GITHUB_OUTPUT
+              echo "model=" >> $GITHUB_OUTPUT ;;
+          esac
+
+  run:
+    needs: route
+    uses: ./.github/workflows/_session.yml
+    secrets: inherit
+    with:
+      slug: ${{ needs.route.outputs.slug }}
+      class: monthly
+      task: ${{ needs.route.outputs.task }}
+      model_override: ${{ needs.route.outputs.model }}
+      effort_override: ${{ needs.route.outputs.effort }}

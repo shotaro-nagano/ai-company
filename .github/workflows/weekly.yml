@@ -1,0 +1,73 @@
+# 週次セッション — 稼働表: 週1組(カゾエ/シラベ/ムスビ/シオリ/マモル/ヤリクリ/ヒラメキ/ヨミ)+ 日曜の経営会議
+# cronはUTC。JST = UTC+9
+name: 週次セッション
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # カゾエ   月 12:00 JST
+    - cron: '0 3 * * 2'   # シラベ   火 12:00 JST
+    - cron: '0 3 * * 3'   # ムスビ   水 12:00 JST
+    - cron: '0 3 * * 4'   # シオリ   木 12:00 JST
+    - cron: '0 3 * * 5'   # マモル   金 12:00 JST
+    - cron: '0 5 * * 5'   # ヤリクリ 金 14:00 JST
+    - cron: '0 3 * * 6'   # ヒラメキ 土 12:00 JST
+    - cron: '0 5 * * 6'   # ヨミ     土 14:00 JST(経営会議前の数字レポート)
+    - cron: '0 0 * * 0'   # 経営会議 日 09:00 JST(レイが議長)
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: '社員slug(手動起動用)'
+        required: true
+        type: choice
+        options: [kazoe, shirabe, musubi, shiori, mamoru, yarikuri, hirameki, yomi, keiei-kaigi]
+      task:
+        description: '追加タスク(任意)'
+        required: false
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    outputs:
+      slug: ${{ steps.pick.outputs.slug }}
+      task: ${{ steps.pick.outputs.task }}
+      effort: ${{ steps.pick.outputs.effort }}
+      model: ${{ steps.pick.outputs.model }}
+    steps:
+      - id: pick
+        run: |
+          MEETING_TASK="週次経営会議を開催する。議長=レイ。参加者(ツクル・ヒカリ・カゾエ・マメ・ヨミ)のロールプロンプトと state/ の申し送り・数字を読み込み、各participantの視点でターン制の議事録を作成する。対立意見・採用しなかった意見も必ず記録。決議は decisions.md へ、議事録は scripts/discord_post.sh rei meeting で #経営会議 へ、週次レポート(売上・費用・利益/今週の施策と結果/来週の計画/人間に判断を仰ぎたい事項)は scripts/discord_post.sh rei weekly で #週次レポート へ投稿する(憲法第5条)"
+          SLUG_IN="${{ inputs.slug }}"
+          case "${{ github.event.schedule }}" in
+            '0 3 * * 1') SLUG=kazoe ;;
+            '0 3 * * 2') SLUG=shirabe ;;
+            '0 3 * * 3') SLUG=musubi ;;
+            '0 3 * * 4') SLUG=shiori ;;
+            '0 3 * * 5') SLUG=mamoru ;;
+            '0 5 * * 5') SLUG=yarikuri ;;
+            '0 3 * * 6') SLUG=hirameki ;;
+            '0 5 * * 6') SLUG=yomi ;;
+            '0 0 * * 0') SLUG=keiei-kaigi ;;
+            '') SLUG="$SLUG_IN" ;;
+          esac
+          if [ "$SLUG" = "keiei-kaigi" ]; then
+            echo "slug=rei" >> $GITHUB_OUTPUT
+            echo "task=$MEETING_TASK" >> $GITHUB_OUTPUT
+            echo "effort=high" >> $GITHUB_OUTPUT     # QUALITY第4節: 週次経営会議 = Opus 4.8 / high
+            echo "model=claude-opus-4-8" >> $GITHUB_OUTPUT
+          else
+            echo "slug=$SLUG" >> $GITHUB_OUTPUT
+            echo "task=${{ inputs.task || '' }}" >> $GITHUB_OUTPUT
+            echo "effort=" >> $GITHUB_OUTPUT
+            echo "model=" >> $GITHUB_OUTPUT
+          fi
+
+  run:
+    needs: route
+    uses: ./.github/workflows/_session.yml
+    secrets: inherit
+    with:
+      slug: ${{ needs.route.outputs.slug }}
+      class: weekly
+      task: ${{ needs.route.outputs.task }}
+      model_override: ${{ needs.route.outputs.model }}
+      effort_override: ${{ needs.route.outputs.effort }}

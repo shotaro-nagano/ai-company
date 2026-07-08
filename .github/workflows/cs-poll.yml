@@ -1,0 +1,46 @@
+# CSポーリング — サポートGmailの未読を6時間ごとに確認し、未読があればマメを起動する
+# Gmail認証が未設定の間は何もしない(保留機能・建国を止めない)
+name: CSポーリング
+
+on:
+  schedule:
+    - cron: '30 22,4,10,16 * * *'   # 6時間ごと(JST 7:30/13:30/19:30/1:30)
+  workflow_dispatch:
+
+concurrency:
+  group: pixelyen-cs-poll
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: 未読確認
+        id: check
+        env:
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_OAUTH_REFRESH_TOKEN: ${{ secrets.GMAIL_OAUTH_REFRESH_TOKEN }}
+        run: |
+          OUT=$(python3 scripts/gmail_poll.py)
+          echo "$OUT"
+          if echo "$OUT" | grep -q "サポート未読メール"; then
+            echo "unread=true" >> $GITHUB_OUTPUT
+          else
+            echo "unread=false" >> $GITHUB_OUTPUT
+          fi
+      - name: マメを起動
+        if: steps.check.outputs.unread == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
+            -f event_type=session \
+            -f "client_payload[slug]=mame" \
+            -f "client_payload[task]=サポート受信箱に未読がある。scripts/gmail_poll.py で内容を確認し、憲法第4条(14日全額返金のみ・値引き不可・対外的な約束禁止)に従って返信する(scripts/gmail_send.py)。対応記録は匿名化・要約のみ state/ に残す"

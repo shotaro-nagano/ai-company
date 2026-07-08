@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l \"/Users/siroemon/Downloads/PixelYen avatars svg.zip\")"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "month": "2026-07",
+  "budget_points": 1000,
+  "note": "Maxプランの月間自動実行枠は外部APIで残量取得できないため、セッション実行回数×モデル重みの自家計測ポイント制で近似する。重みの補正はヤリクリが週次で行い decisions.md に記録する。",
+  "weights": {
+    "claude-opus-4-8": 12,
+    "claude-sonnet-4-6": 5,
+    "claude-haiku-4-5": 1
+  },
+  "thresholds": {
+    "eco_mode_percent": 80,
+    "cs_reserve_percent": 85
+  },
+  "spent_points": 0,
+  "sessions": []
+}

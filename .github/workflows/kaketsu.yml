@@ -1,0 +1,52 @@
+# 自己修復 — セッションworkflowが失敗したらカケツを自動起動して復旧を試み #エラー へ報告
+name: カケツ自動出動
+
+on:
+  workflow_run:
+    workflows: ["常勤セッション", "週次セッション", "月次セッション", "イベントセッション", "CSポーリング", "サイト公開", "試運転(意図的失敗)"]
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: pixelyen-session
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code をインストール
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: 失敗ログを取得
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run view ${{ github.event.workflow_run.id }} --log-failed > /tmp/failed_log.txt 2>&1 || true
+          tail -c 40000 /tmp/failed_log.txt > /tmp/failed_log_tail.txt
+
+      - name: カケツのセッションを実行
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          DISCORD_WEBHOOK_APPROVAL: ${{ secrets.DISCORD_WEBHOOK_APPROVAL }}
+          DISCORD_WEBHOOK_SALES: ${{ secrets.DISCORD_WEBHOOK_SALES }}
+          DISCORD_WEBHOOK_WEEKLY: ${{ secrets.DISCORD_WEBHOOK_WEEKLY }}
+          DISCORD_WEBHOOK_MEETING: ${{ secrets.DISCORD_WEBHOOK_MEETING }}
+          DISCORD_WEBHOOK_LOG: ${{ secrets.DISCORD_WEBHOOK_LOG }}
+          DISCORD_WEBHOOK_ERROR: ${{ secrets.DISCORD_WEBHOOK_ERROR }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          TASK="workflow「${{ github.event.workflow_run.name }}」(run ${{ github.event.workflow_run.id }})が失敗した。/tmp/failed_log_tail.txt の失敗ログを読み、原因を特定して復旧せよ。まず止血(リポジトリ内のスクリプト/ワークフロー/stateの修正)、原因報告、再発防止までワンセット。修正はコミットし、結果を scripts/discord_post.sh kaketsu error で #エラー へ報告する。認証情報の失効が原因と判断したら、マモルの再発行依頼手順に従い #承認待ち にも掲示する"
+          bash scripts/run_session.sh kaketsu event "$TASK"

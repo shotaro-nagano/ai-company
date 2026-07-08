@@ -1,0 +1,153 @@
+{
+  "generated_at": "2026-07-08T11:46:24+00:00",
+  "month": "2026-07",
+  "revenue_this_month": 0,
+  "cost_this_month": 15000,
+  "profit_this_month": -15000,
+  "total_revenue": 0,
+  "level": 1,
+  "next_level_goal": 10000,
+  "hp_percent": 0,
+  "exp_percent": 0,
+  "party": [
+    "rei",
+    "tsukuru",
+    "iroha",
+    "metsuke"
+  ],
+  "usage_percent": 0.0,
+  "employees": {
+    "rei": {
+      "name": "レイ",
+      "role": "CEO",
+      "dept": "経営",
+      "color": "#FFC825"
+    },
+    "matome": {
+      "name": "マトメ",
+      "role": "番頭",
+      "dept": "経営",
+      "color": "#FFC825"
+    },
+    "hirameki": {
+      "name": "ヒラメキ",
+      "role": "新規事業",
+      "dept": "経営",
+      "color": "#FFC825"
+    },
+    "kataribe": {
+      "name": "カタリベ",
+      "role": "社史編纂",
+      "dept": "経営",
+      "color": "#FFC825"
+    },
+    "mame": {
+      "name": "マメ",
+      "role": "CS",
+      "dept": "経営",
+      "color": "#FFC825"
+    },
+    "tsukuru": {
+      "name": "ツクル",
+      "role": "プロダクト部長/開発",
+      "dept": "プロダクト",
+      "color": "#41A6F6"
+    },
+    "iroha": {
+      "name": "イロハ",
+      "role": "デザイン",
+      "dept": "プロダクト",
+      "color": "#41A6F6"
+    },
+    "mekiki": {
+      "name": "メキキ",
+      "role": "品質管理",
+      "dept": "プロダクト",
+      "color": "#41A6F6"
+    },
+    "tsuzuri": {
+      "name": "ツヅリ",
+      "role": "ライター",
+      "dept": "プロダクト",
+      "color": "#41A6F6"
+    },
+    "kaketsu": {
+      "name": "カケツ",
+      "role": "障害対応",
+      "dept": "プロダクト",
+      "color": "#41A6F6"
+    },
+    "hikari": {
+      "name": "ヒカリ",
+      "role": "グロース部長/マーケ",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "hirome": {
+      "name": "ヒロメ",
+      "role": "広報",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "shirabe": {
+      "name": "シラベ",
+      "role": "リサーチ",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "yomi": {
+      "name": "ヨミ",
+      "role": "分析",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "wataru": {
+      "name": "ワタル",
+      "role": "海外展開",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "musubi": {
+      "name": "ムスビ",
+      "role": "カスタマーサクセス",
+      "dept": "グロース",
+      "color": "#E64539"
+    },
+    "kazoe": {
+      "name": "カゾエ",
+      "role": "コーポレート部長/経理",
+      "dept": "コーポレート",
+      "color": "#38B764"
+    },
+    "okite": {
+      "name": "オキテ",
+      "role": "法務",
+      "dept": "コーポレート",
+      "color": "#38B764"
+    },
+    "shiori": {
+      "name": "シオリ",
+      "role": "ナレッジ管理",
+      "dept": "コーポレート",
+      "color": "#38B764"
+    },
+    "mamoru": {
+      "name": "マモル",
+      "role": "セキュリティ",
+      "dept": "コーポレート",
+      "color": "#38B764"
+    },
+    "yarikuri": {
+      "name": "ヤリクリ",
+      "role": "コスト最適化",
+      "dept": "コーポレート",
+      "color": "#38B764"
+    },
+    "metsuke": {
+      "name": "メツケ",
+      "role": "監査役(独立)",
+      "dept": "監査",
+      "color": "#7B5FB5"
+    }
+  }
+}

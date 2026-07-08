@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-08T11:46:24+00:00",
+  "generated_at": "2026-07-08T11:52:01+00:00",
   "month": "2026-07",
   "revenue_this_month": 0,
   "cost_this_month": 15000,
@@ -9,12 +9,7 @@
   "next_level_goal": 10000,
   "hp_percent": 0,
   "exp_percent": 0,
-  "party": [
-    "rei",
-    "tsukuru",
-    "iroha",
-    "metsuke"
-  ],
+  "party": [],
   "usage_percent": 0.0,
   "employees": {
     "rei": {

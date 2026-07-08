@@ -23,6 +23,9 @@ case "$CHANNEL" in
   *) echo "unknown channel: $CHANNEL" >&2; exit 1 ;;
 esac
 
+# Webhook URLの改行・前後空白を除去(Secrets登録時のコピー由来の混入を防御)
+WEBHOOK="$(printf %s "$WEBHOOK" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
 if [ -z "$WEBHOOK" ]; then
   echo "[discord_post] webhook for '$CHANNEL' not set — skipped (message follows)" >&2
   echo "$MESSAGE" >&2

@@ -13,6 +13,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
+# 認証トークンの改行混入を除去(setup-tokenのコピー時に折り返し改行が入りやすい)。
+# 純粋な折り返し改行なら除去で元のトークンに復元される。前後空白も落とす。
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  export CLAUDE_CODE_OAUTH_TOKEN="$(printf %s "$CLAUDE_CODE_OAUTH_TOKEN" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+fi
+
 AGENT_FILE="agents/${SLUG}.md"
 [ -f "$AGENT_FILE" ] || { echo "role prompt not found: $AGENT_FILE" >&2; exit 1; }
 

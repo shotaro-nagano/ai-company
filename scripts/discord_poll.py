@@ -35,7 +35,8 @@ def api_get(token: str, path: str):
 
 def main() -> None:
     update_last_read = "--update-last-read" in sys.argv
-    token = os.environ.get("DISCORD_BOT_TOKEN", "")
+    # Secrets登録時のコピー由来の改行・空白を除去
+    token = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
     if not token:
         print("(Discordポーリング: DISCORD_BOT_TOKEN 未設定のためスキップ。承認事項・社長室の指示は「なし」として扱う)")
         return

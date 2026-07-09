@@ -1,0 +1,16 @@
+{
+  "offices": [
+    {
+      "id": "hq",
+      "name": "本店",
+      "location": "神奈川県横浜市・みなとみらい タワーマンション屋上",
+      "unlocked_at_level": 1,
+      "scene": "minatomirai-rooftop"
+    }
+  ],
+  "next_unlock": {
+    "level": 2,
+    "condition": "月商1万円",
+    "teaser": "新オフィス"
+  }
+}

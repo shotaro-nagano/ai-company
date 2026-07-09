@@ -44,7 +44,7 @@ if [ -n "${GITHUB_REPOSITORY:-}" ]; then
 fi
 
 python3 - "$USERNAME" "$AVATAR_URL" "$MESSAGE" "$WEBHOOK" <<'PY'
-import json, sys, urllib.request
+import json, sys, urllib.request, urllib.error
 username, avatar_url, message, webhook = sys.argv[1:5]
 # Discordの1メッセージ上限は2000文字。超える場合は分割して送る
 chunks = [message[i:i+1900] for i in range(0, len(message), 1900)] or [""]
@@ -55,8 +55,15 @@ for chunk in chunks:
     req = urllib.request.Request(
         webhook,
         data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", "User-Agent": "PixelYen/1.0"},
     )
-    urllib.request.urlopen(req, timeout=15)
+    try:
+        urllib.request.urlopen(req, timeout=15)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")
+        # webhookのIDだけ出す(tokenは秘匿)。診断のためDiscordのエラー本文を表示
+        wid = webhook.split("/webhooks/")[-1].split("/")[0] if "/webhooks/" in webhook else "?"
+        print(f"[discord_post] HTTP {e.code} webhook_id={wid} body={body}", file=sys.stderr)
+        raise
 print("[discord_post] sent", len(chunks), "chunk(s)")
 PY

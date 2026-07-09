@@ -47,17 +47,28 @@ def main() -> None:
     next_goal = 10_000 if level == 1 else 30_000 if level == 2 else 100_000
     exp_pct = min(100, round(100 * revenue / next_goal))
 
-    # 今週稼働した社員(usage.json の直近7日)
+    # 今週稼働した社員(usage.json の直近7日)+ 社員別の直近稼働(オフィス演出用)
     usage = json.loads((REPO / "state" / "usage.json").read_text())
-    week_ago = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    week_ago = now - datetime.timedelta(days=7)
+    day_ago = now - datetime.timedelta(hours=24)
     party = []
+    activity = {}  # slug -> {last_at, sessions_7d, active_24h}
     for s in usage.get("sessions", []):
         try:
             at = datetime.datetime.fromisoformat(s["at"])
         except (KeyError, ValueError):
             continue
-        if at >= week_ago and s["slug"] not in party:
-            party.append(s["slug"])
+        slug = s.get("slug", "")
+        a = activity.setdefault(slug, {"last_at": None, "sessions_7d": 0, "active_24h": False})
+        if a["last_at"] is None or s["at"] > a["last_at"]:
+            a["last_at"] = s["at"]
+        if at >= week_ago:
+            a["sessions_7d"] += 1
+            if slug not in party:
+                party.append(slug)
+        if at >= day_ago:
+            a["active_24h"] = True
 
     employees = json.loads((REPO / "scripts" / "employees.json").read_text())
 
@@ -76,6 +87,7 @@ def main() -> None:
                 "hp_percent": hp,
                 "exp_percent": exp_pct,
                 "party": party,
+                "activity": activity,
                 "usage_percent": round(
                     100 * usage.get("spent_points", 0) / max(usage.get("budget_points", 1000), 1), 1
                 ),

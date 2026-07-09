@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-08T11:52:01+00:00",
+  "generated_at": "2026-07-09T01:47:09+00:00",
   "month": "2026-07",
   "revenue_this_month": 0,
   "cost_this_month": 15000,
@@ -9,8 +9,35 @@
   "next_level_goal": 10000,
   "hp_percent": 0,
   "exp_percent": 0,
-  "party": [],
-  "usage_percent": 0.0,
+  "party": [
+    "kaketsu",
+    "matome",
+    "hirameki",
+    "rei"
+  ],
+  "activity": {
+    "kaketsu": {
+      "last_at": "2026-07-08T15:08:02+00:00",
+      "sessions_7d": 3,
+      "active_24h": true
+    },
+    "matome": {
+      "last_at": "2026-07-09T04:30:00+00:00",
+      "sessions_7d": 11,
+      "active_24h": true
+    },
+    "hirameki": {
+      "last_at": "2026-07-09T00:16:43+00:00",
+      "sessions_7d": 1,
+      "active_24h": true
+    },
+    "rei": {
+      "last_at": "2026-07-09T00:22:51+00:00",
+      "sessions_7d": 1,
+      "active_24h": true
+    }
+  },
+  "usage_percent": 4.2,
   "employees": {
     "rei": {
       "name": "レイ",

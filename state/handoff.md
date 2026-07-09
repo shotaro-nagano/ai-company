@@ -10,6 +10,8 @@
 
 ## 未処理
 
+- [ ] **カケツ(次回)**: CSポーリング(run 29019067582)の再発防止として、今後「The job was not acquired by Runner」エラーが続けて2回以上発生した場合は、cs-poll.yml の `timeout-minutes` または `cron` 間隔を見直す提案をランナーへ上げること。単発なら手動 rerun で十分。GitHub Actions インフラ輻輳は外部要因であり、コード修正では対処不可。
+
 - [ ] **ツクル(次回)**: site/ とインフラを引き続き監視。ツヅリの P-001 M1 ドラフト到着を確認し、`products/p-001/` が作成されたら products.md の状態を「M1完了」に更新する。
 - [ ] **ツヅリ**: P-001 M1に着手(**2026-07-09 レイが再dispatch**)。成果物は `products/p-001/` 配下に .md で作成 → 全体構成確定表(`00_structure.md`)+第0章(`chapter-00.md`・はじめに・免責明記)+第1章(`chapter-01.md`・準備編)。章立ては products.md / decisions.md #008 参照。**収益の保証・示唆は厳禁(第3条)**。完成したら products.md をM1完了に更新し、`scripts/dispatch_colleague.sh okite "P-001 M1ドラフト完成。対象: products/p-001/chapter-00.md / chapter-01.md / 00_structure.md。憲法整合・第3条・免責の一次監修お願いします"` でオキテへdispatchする
 - [ ] **オキテ**: ツヅリのP-001ドラフトが上がり次第、憲法整合・誇大表現チェックの一次監修に入る(M2目安)。⚠️ 2026-07-09 セッションで確認: `products/p-001/` が未作成(ツヅリM1未完了)のため監修不可。ツヅリのM1完成・products.md更新後に再dispatch待ち

@@ -1053,40 +1053,39 @@
         em.timer = rand(5, 9);
       }
     } else {
+      /* 基本は常に勤務(オーナー方針 2026-07-09)。休憩・移動は少数の彩りに留める */
       var roll = Math.random();
-      if (roll < 0.3) {
-        /* フロア全域を歩き回る(ゾーン間の移動) */
+      if (roll < 0.7) {
+        em.state = 'work';
+        em.tx = em.seat[0]; em.ty = em.seat[1];
+        em.timer = rand(12, 26);
+      } else if (roll < 0.78) {
+        em.state = 'meeting';
+        goSpot(em, pick(MEETING_SPOTS), 15, 0);
+        em.timer = rand(8, 14);
+      } else if (roll < 0.85) {
+        em.state = 'focus';
+        goSpot(em, pick(FOCUS_SPOTS), 6, 4);
+        em.timer = rand(10, 16);
+      } else if (roll < 0.9) {
+        em.state = 'coffee';
+        goSpot(em, pick(COFFEE_SPOTS), 20, 10);
+        em.timer = rand(4, 8);
+      } else if (roll < 0.94) {
+        /* フロア移動(ゾーン間) */
         em.state = 'wander';
         em.tx = rand(WALK_AREA.x0, WALK_AREA.x1);
         em.ty = rand(WALK_AREA.y0, WALK_AREA.y1);
-        em.timer = rand(2, 6);
-      } else if (roll < 0.45) {
-        em.state = 'coffee';
-        goSpot(em, pick(COFFEE_SPOTS), 20, 10);
-        em.timer = rand(6, 12);
-      } else if (roll < 0.6) {
-        em.state = 'meeting';
-        goSpot(em, pick(MEETING_SPOTS), 15, 0);
-        em.timer = rand(8, 16);
-      } else if (roll < 0.76) {
+        em.timer = rand(2, 5);
+      } else if (roll < 0.97) {
         /* リフレッシュ: ソファ・卓球・テラス */
         em.state = 'break';
         goSpot(em, pick(BREAK_SPOTS), 12, 8);
-        em.timer = rand(7, 14);
-      } else if (roll < 0.86) {
+        em.timer = rand(5, 9);
+      } else {
         em.state = 'read';
         goSpot(em, pick(READ_SPOTS), 8, 6);
-        em.timer = rand(9, 16);
-      } else if (roll < 0.94) {
-        em.state = 'focus';
-        goSpot(em, pick(FOCUS_SPOTS), 6, 4);
-        em.timer = rand(10, 18);
-      } else {
-        em.state = 'idle';
-        em.tx = em.x + rand(-120, 120);
-        em.tx = Math.min(WALK_AREA.x1, Math.max(WALK_AREA.x0, em.tx));
-        em.ty = Math.min(WALK_AREA.y1, Math.max(WALK_AREA.y0, em.y + rand(-60, 60)));
-        em.timer = rand(4, 9);
+        em.timer = rand(6, 10);
       }
     }
     setBubble(em);

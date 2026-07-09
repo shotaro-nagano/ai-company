@@ -61,10 +61,13 @@ ${GOAL_TEXT}
 3. state/ を読む(kpi.md / products.md / decisions.md / handoff.md)
 4. 下の「ポーリング結果」を確認する(#承認待ちの承認状況・#社長室の人間の指示・Stripe売上)。
    人間の指示があれば憲法の範囲内で最優先。承認済みの掲示があれば反映する。売上があれば state/kpi.md を更新する
-5. handoff.md の自分宛てタスクと、本日のタスクを実行する
-6. 終了前に必ず: state/ を更新し、handoff.md に次回への申し送りを書き、
+5. 作業前にスキルを探す(スキルファースト原則): skills/ に該当の型があればそれに従う。
+   無ければ find-skills(npx -y skills@latest find "検索語")で候補を発見してよいが、
+   外部スキルの導入・実行は無審査では禁止(マモル審査→進化会議の採用決議が必要)
+6. handoff.md の自分宛てタスクと、本日のタスクを実行する
+7. 終了前に必ず: state/ を更新し、handoff.md に次回への申し送りを書き、
    変更を git add して自分の名前で git commit する(pushはランナーが行う)
-7. 最後に scripts/discord_post.sh ${SLUG} <channel> "<報告>" で所定チャンネルへ報告する
+8. 最後に scripts/discord_post.sh ${SLUG} <channel> "<報告>" で所定チャンネルへ報告する
    (通常業務は log。ロールプロンプトの出力形式に従う)
 
 制約(違反禁止):

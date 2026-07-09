@@ -42,8 +42,18 @@ fi
 POLL_CONTEXT="$(python3 "$SCRIPT_DIR/discord_poll.py" --update-last-read 2>&1 || true)"
 STRIPE_CONTEXT="$(python3 "$SCRIPT_DIR/stripe_poll.py" 2>&1 || true)"
 
+# --- 北極星(/goal 相当)を読み込む。全セッションのプロンプト冒頭に注入する ---
+GOAL_TEXT=""
+[ -f "state/goal.md" ] && GOAL_TEXT="$(cat state/goal.md)"
+
 # --- プロンプト組立(QUALITY第3節の標準手順を強制) ---
 PROMPT=$(cat <<EOF
+==================== 会社の北極星 /goal ====================
+以下はPixelYenの全社共通の目標(北極星)です。今日のあなたの働きが、常にこの目標に
+向いているかを自問しながら作業してください。「それは利益に繋がるか?」
+${GOAL_TEXT}
+============================================================
+
 あなたはPixelYenの社員セッションです。以下の手順を厳守してください。
 
 1. まず CLAUDE.md を読む(会社の地図と憲法の要点)

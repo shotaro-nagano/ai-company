@@ -2,10 +2,10 @@
   "offices": [
     {
       "id": "hq",
-      "name": "本店",
-      "location": "神奈川県横浜市・みなとみらい タワーマンション屋上",
+      "name": "本店(最上階ペントハウス)",
+      "location": "神奈川県横浜市・みなとみらい タワーマンション最上階",
       "unlocked_at_level": 1,
-      "scene": "minatomirai-rooftop"
+      "scene": "minatomirai-penthouse"
     }
   ],
   "next_unlock": {

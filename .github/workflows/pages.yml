@@ -33,6 +33,14 @@ jobs:
         run: |
           mkdir -p site/assets/avatars
           cp assets/avatars/*.svg site/assets/avatars/ 2>/dev/null || true
+          # オフィスシーン用の透過版(全面背景rectを除去)を生成
+          mkdir -p site/assets/avatars/office
+          python3 - <<'PY'
+          import re, pathlib
+          for f in pathlib.Path("assets/avatars").glob("*.svg"):
+              t = re.sub(r'<rect width="32" height="32" fill="#[0-9A-Fa-f]{6}"/>', '', f.read_text(), count=1)
+              (pathlib.Path("site/assets/avatars/office") / f.name).write_text(t)
+          PY
           cp assets/logo.svg site/assets/ 2>/dev/null || true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

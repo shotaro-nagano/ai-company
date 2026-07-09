@@ -316,6 +316,16 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   top: 0;
   left: 0;
   will-change: transform;
+  z-index: 2;
+}
+/* 夜景(パララックス遠景レイヤー): 室内の約0.3倍で追従 */
+.office-far {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  z-index: 1;
+  pointer-events: none;
 }
 .office-bg {
   position: absolute;
@@ -363,10 +373,10 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 }
 .office-beacon { animation: office-beacon 2s steps(1) infinite; }
 @keyframes office-beacon { 0%, 55% { opacity: 1; } 56%, 99% { opacity: 0.1; } }
-.office-plane { animation: office-plane 52s linear infinite; }
+.office-plane { animation: office-plane 64s linear infinite; }
 @keyframes office-plane {
   0% { transform: translate(-60px, 210px); }
-  100% { transform: translate(3280px, 130px); }
+  100% { transform: translate(4880px, 130px); }
 }
 .office-plane__beacon { animation: office-beacon 1.1s steps(1) infinite; }
 .office-screen { fill: #b9d9ff; animation: office-screen 5s ease-in-out infinite; }
@@ -375,26 +385,86 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   50% { fill: #cfe4ff; opacity: 1; }
 }
 .office-steam { animation: office-steam 2.6s ease-in-out infinite; }
+.office-steam--2 { animation-delay: 1.3s; }
 @keyframes office-steam {
   0%, 100% { opacity: 0.5; transform: translateY(0); }
   50% { opacity: 0.15; transform: translateY(-6px); }
 }
+/* エントランスの発光サイン */
+.office-sign-glow { animation: office-sign 4.5s ease-in-out infinite; }
+@keyframes office-sign {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+/* アクアリウム: 魚の往復(向き反転つき)と泡・水草 */
+.office-fish { animation: office-fish 17s ease-in-out infinite; }
+.office-fish--2 { animation-duration: 23s; animation-delay: -8s; }
+.office-fish--3 { animation-duration: 29s; animation-delay: -4s; }
+@keyframes office-fish {
+  0%       { transform: translate(-52px, 0) scaleX(1); }
+  46%      { transform: translate(52px, -8px) scaleX(1); }
+  50%      { transform: translate(52px, -8px) scaleX(-1); }
+  96%      { transform: translate(-52px, 2px) scaleX(-1); }
+  100%     { transform: translate(-52px, 0) scaleX(1); }
+}
+.office-bub { animation: office-bub 3.8s linear infinite; }
+.office-bub--2 { animation-duration: 4.6s; animation-delay: -1.6s; }
+.office-bub--3 { animation-duration: 3.2s; animation-delay: -2.4s; }
+@keyframes office-bub {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.6; }
+  85% { opacity: 0.5; }
+  100% { transform: translateY(-104px); opacity: 0; }
+}
+.office-weed { animation: office-weed 5s ease-in-out infinite; transform-origin: center bottom; }
+.office-weed--2 { animation-delay: -2.2s; }
+@keyframes office-weed {
+  0%, 100% { transform: skewX(0deg); }
+  50% { transform: skewX(4deg); }
+}
+/* 卓球ボール(ネットを挟んで行き来) */
+.office-ppball { animation: office-ppball 2.4s linear infinite; }
+@keyframes office-ppball {
+  0%   { transform: translate(4020px, 902px); }
+  25%  { transform: translate(4075px, 872px); }
+  50%  { transform: translate(4180px, 900px); }
+  75%  { transform: translate(4125px, 870px); }
+  100% { transform: translate(4020px, 902px); }
+}
+/* テラス: ストリングライトの瞬きと植栽の夜風ゆらぎ */
+.office-blb { animation: office-blb 3.6s ease-in-out infinite; }
+.office-blb--1 { animation-delay: 0.9s; }
+.office-blb--2 { animation-delay: 1.8s; }
+.office-blb--3 { animation-delay: 2.7s; }
+@keyframes office-blb {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.office-sway { animation: office-sway 6.5s ease-in-out infinite; }
+.office-sway--2 { animation-duration: 8s; animation-delay: -3s; }
+.office-sway--3 { animation-duration: 7s; animation-delay: -1.5s; }
+@keyframes office-sway {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50% { transform: rotate(1.6deg); }
+}
 @media (prefers-reduced-motion: reduce) {
   .office-wheel, .office-star, .office-win, .office-glint, .office-refl,
-  .office-plane, .office-screen, .office-steam, .office-wheel-glow, .office-beacon { animation: none; }
+  .office-plane, .office-screen, .office-steam, .office-wheel-glow, .office-beacon,
+  .office-sign-glow, .office-fish, .office-bub, .office-weed, .office-ppball,
+  .office-blb, .office-sway { animation: none; }
 }
 
-/* ---- 社員スプライト ---- */
+/* ---- 社員スプライト(characters/*.svg = 64x96・足元接地) ---- */
 .office-emp {
   position: absolute;
   width: 64px;
-  height: 64px;
+  height: 96px;
   margin: 0;
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
-  transform: translate(-50%, -92%);
+  transform: translate(-50%, -97%);
   -webkit-tap-highlight-color: transparent;
 }
 /* 足元のソフトな楕円影 */
@@ -415,9 +485,13 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   width: 100%;
   height: 100%;
   display: block;
+  image-rendering: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+/* キャラ未完成時のドット絵フォールバックのみピクセル描画 */
+.office-emp img.is-fallback {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 .office-emp.is-working img { animation: office-bounce 0.9s steps(2) infinite; }
 @keyframes office-bounce { 0%, 49% { translate: 0 0; } 50%, 99% { translate: 0 -3px; } }
@@ -503,6 +577,10 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
+  object-fit: contain;
+  image-rendering: auto;
+}
+.office-panel__avatar.is-fallback {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -596,11 +674,91 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 .office-hint.is-on { opacity: 0.9; animation: office-hint-pulse 2.4s ease-in-out infinite; }
 @keyframes office-hint-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.95; } }
 
+/* ---- ナビゲーション(ゾーンジャンプ+ミニマップ) ---- */
+.office-nav {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 160;
+  transform: translateX(-50%);
+  width: min(620px, calc(100% - 120px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.office-jump {
+  display: flex;
+  gap: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.office-jump::-webkit-scrollbar { display: none; }
+.office-jump__chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(16, 20, 42, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #e9ecf7;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.office-jump__chip:hover { background: rgba(40, 48, 84, 0.85); }
+.office-jump__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.office-map {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 13, 30, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  touch-action: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.office-map__zone {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  opacity: 0.55;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.office-map__view {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
 /* ドラッグ操作の初回ヒント */
 .office-dragnote {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 88px;
   z-index: 140;
   transform: translateX(-50%);
   padding: 5px 14px;
@@ -620,14 +778,17 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 
 @media (max-width: 640px) {
   .office-scene { height: min(72vh, 480px); min-height: 340px; }
-  .office-emp { width: 32px; height: 32px; }
+  .office-emp { width: 44px; height: 66px; }
   .office-emp::after { height: 8px; bottom: -2px; }
   .office-emp__bubble { top: -14px; font-size: 11px; }
   .office-hud { width: 152px; padding: 7px 9px; font-size: 11px; }
   .office-hud__lv { font-size: 12px; }
   .office-tab { font-size: 12px; padding: 4px 10px 7px; }
   .office-zoom__btn { width: 32px; height: 32px; }
-  .office-dragnote { font-size: 11px; }
+  .office-dragnote { font-size: 11px; bottom: 78px; }
+  .office-nav { width: calc(100% - 16px); gap: 4px; }
+  .office-map { height: 18px; }
+  .office-jump__chip { font-size: 10px; padding: 3px 8px; }
 }
 
 /* ---------- レスポンシブ ---------- */

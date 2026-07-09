@@ -98,6 +98,15 @@ python3 "$SCRIPT_DIR/record_usage.py" "$SLUG" "$MODEL"
 
 # --- commit / push(セッションがcommitし忘れた分も拾う) ---
 git add -A
+# GITHUB_TOKEN は .github/workflows/ を変更できない(GitHubのセキュリティ制約)。
+# 混入すると state 変更まで巻き添えで push 失敗するため、ワークフロー変更は除外して人間に申し送る。
+if ! git diff --cached --quiet -- .github/workflows/ 2>/dev/null; then
+  git reset -q -- .github/workflows/ 2>/dev/null || true
+  git checkout -q -- .github/workflows/ 2>/dev/null || true
+  echo "[run_session] ワークフロー変更を検出 → 除外(自動トークンでは適用不可)"
+  "$SCRIPT_DIR/discord_post.sh" mamoru approval \
+    "🔧 ${SLUG} がワークフロー(.github/workflows/)の変更を提案しましたが、自動トークンでは適用できません(GitHubの仕様)。人間の適用が必要です。詳細は decisions.md と当該セッションログを参照。これは組織=稼働表の変更に相当するため、人間マターとして掲示します(憲法第8条)。" || true
+fi
 git diff --cached --quiet || git commit -m "${SLUG}: セッション自動記録 (${CLASS})"
 for i in 1 2 3; do
   if git pull --rebase origin main && git push origin main; then

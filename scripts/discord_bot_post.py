@@ -33,7 +33,9 @@ def api(token, method, path, body=None):
         },
     )
     with urllib.request.urlopen(req, timeout=20) as r:
-        return json.load(r)
+        raw = r.read()
+        # Webhook実行は204 No Content(本文なし)を返す。空ならNoneを返す
+        return json.loads(raw) if raw else None
 
 
 def main() -> None:

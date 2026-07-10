@@ -1,0 +1,44 @@
+# 社長室ポーリング — 15分ごとに #社長室 の未読を確認し、
+# 人間の指示があればレイを即起動して「受領返信+優先度判断+タスク化」させる。
+# 未読チェック自体はclaudeを使わない軽量ジョブ(定額枠を消費しない)。
+name: 社長室ポーリング
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: pixelyen-boss-poll
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: 未読確認(読了位置は進めない)
+        id: check
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          OUT=$(python3 scripts/discord_poll.py)
+          echo "$OUT"
+          if echo "$OUT" | grep -q "人間の指示は憲法の範囲内で最優先"; then
+            echo "unread=true" >> $GITHUB_OUTPUT
+          else
+            echo "unread=false" >> $GITHUB_OUTPUT
+          fi
+      - name: レイを起動(指示対応)
+        if: steps.check.outputs.unread == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run daily.yml --ref main \
+            -f slug=rei \
+            -f task="#社長室 に人間(オーナー)からの新しいメッセージがある(ポーリング結果参照)。最優先で対応せよ: (1)内容を読み、質問なら答えを、指示なら優先度判断とタスク化(handoff.md)を行う (2)必ず scripts/discord_boss_reply.py で #社長室 に返信する(受領の一言+回答または対応方針。平易な日本語で簡潔に) (3)状況確認の依頼なら state/kpi.md・handoff.md・直近のdecisionsから正直に要約して返す。憲法の範囲内で人間の指示は最優先(第3条🟢の範囲は即実行、🟡は#承認待ちへ、🔴は丁重に不可と説明)"

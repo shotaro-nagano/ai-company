@@ -80,20 +80,41 @@ def main() -> None:
             last = {}
             if LAST_READ_FILE.exists():
                 last = json.loads(LAST_READ_FILE.read_text())
-            after = last.get("boss", "")
-            path = f"/channels/{boss_id}/messages?limit=50" + (f"&after={after}" if after else "")
-            msgs = api_get(token, path)
-            humans = [m for m in reversed(msgs) if not m.get("author", {}).get("bot")]
+
+            # 読む場所 = チャンネル直下 + 社長室配下のアクティブスレッド(人間はスレッドにも書く)
+            sources = [("boss", boss_id, "")]
+            try:
+                guilds = api_get(token, "/users/@me/guilds")
+                if guilds:
+                    active = api_get(token, f"/guilds/{guilds[0]['id']}/threads/active")
+                    for th in active.get("threads", []):
+                        if th.get("parent_id") == boss_id:
+                            sources.append((f"boss_th_{th['id']}", th["id"], th.get("name", "スレッド")))
+            except Exception:
+                pass  # スレッド列挙に失敗しても直下は読む
+
+            humans = []
+            newest_by_key = {}
+            for key, cid, label in sources:
+                after = last.get(key, "")
+                path = f"/channels/{cid}/messages?limit=50" + (f"&after={after}" if after else "")
+                msgs = api_get(token, path)
+                if msgs:
+                    newest_by_key[key] = str(max(int(m["id"]) for m in msgs))
+                for m in reversed(msgs):
+                    if not m.get("author", {}).get("bot"):
+                        place = f"(スレッド「{label}」)" if label else ""
+                        humans.append(f"- {m['author'].get('username','人間')}{place}: {m.get('content','')}")
+
             print("\n## #社長室(人間からの指示・未読分)")
             if humans:
                 print("**人間の指示は憲法の範囲内で最優先事項として扱う。レイが優先度を判断しタスク化する。**")
-                for m in humans:
-                    print(f"- {m['author'].get('username','人間')}: {m.get('content','')}")
+                for line in humans:
+                    print(line)
             else:
                 print("未読の指示なし(通常運転)")
-            if update_last_read and msgs:
-                newest = max(int(m["id"]) for m in msgs)
-                last["boss"] = str(newest)
+            if update_last_read and newest_by_key:
+                last.update(newest_by_key)
                 LAST_READ_FILE.write_text(json.dumps(last, indent=2))
         except Exception as e:
             print(f"(#社長室 の読み取りに失敗: {e} — 通常運転を継続)")

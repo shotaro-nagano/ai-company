@@ -88,7 +88,7 @@
   var READ_SPOTS    = [[4745, 990], [4855, 1020]];
   var FOCUS_SPOTS   = [[2520, 965], [2660, 965]];
   /* AI社員は社長室(0-700)には入らない */
-  var WALK_AREA = { x0: OWNER_W + 90, x1: OWNER_W + 6330, y0: 800, y1: 1055 };
+  var WALK_AREA = { x0: OWNER_W + 90, x1: OWNER_W + 6330, y0: 790, y1: 1000 };  /* 下部UI(チップ/ミニマップ)に隠れない高さに制限 */
   /* 上記の席・スポット座標(旧6400系)をまとめて +OWNER_W シフト */
   (function shiftX() {
     function sh(list) { list.forEach(function (p) { p[0] += OWNER_W; }); }
@@ -1634,7 +1634,8 @@
     /* 遠景: 高さは室内と同じ、幅は 4800/1100 比の等倍スケール */
     farEl.style.width = (FAR_W * scale) + 'px';
     farEl.style.height = view.worldH + 'px';
-    view.panY = Math.min(0, (vh - view.worldH) / 2);
+    /* 縦は下端合わせ(はみ出す分は空側を切る)。床と社員が常に見えるようにする */
+    view.panY = Math.min(0, vh - view.worldH);
     clampPan();
     applyPan();
   }

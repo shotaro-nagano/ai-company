@@ -1,8 +1,14 @@
 /* ============================================================
    PixelYen ライブオフィス — みなとみらい・最上階ペントハウス(本店)
-   第2次拡張(decisions.md #013): フロア約2倍(6400x1100)・
-   パララックス夜景・大会議室/リフレッシュルーム/テラス等の新ゾーン・
-   ミニマップ+ゾーンジャンプ・キャラクターSVG差し替え(フォールバック付)。
+   第3次大改修:
+   ・時間帯連動の昼夜サイクル(朝/昼/夕/夜・JST・2秒フェード・
+     window.__officeTimeOverride で検証可・手動プレビューボタン付)
+   ・2フロア化: RF「ルーフトップ・スカイラウンジ」新設
+     (インフィニティプール/ファイヤーピット/スカイバー/ヘリポート/
+      エレベーター演出・社員が時々RFへ休憩に行く=常時2〜4名程度)
+   ・質感: 磨いた床の鏡面反射(キャラ)・着席表現・歩行ロール・
+     大理石受付・真鍮ディテール・会議室/KPIモニターに実データ投影
+   ・詳細: 社員パネルに「最近の仕事」(本物のgitコミット)フィード
    素のJS/SVG/CSSのみ。dashboard.json / offices.json 取得失敗時は
    全員「勤務中」のデフォルト演出にフォールバックする。
    ドラッグ/スワイプ/←→でパン、+/− でズーム(8色縛り解除 #012)。
@@ -93,6 +99,29 @@
   var OWNER_SPOTS = { desk: [330, 930], sofa: [128, 1002], scope: [592, 942] };
 
   /* ============================================================
+     RF「ルーフトップ・スカイラウンジ」(第3次改修)
+     論理座標は1Fと同じ 7100 x 1100。エレベーターは両フロア右端の同位置。
+     ============================================================ */
+  var RF_ZONES = [
+    { id: 'rf-heli',  label: 'ヘリポート',     en: 'HELIPAD',        x0: 0,    x1: 1340, color: '#8fa3c8' },
+    { id: 'rf-deck',  label: 'サンデッキ',     en: 'SUN DECK',       x0: 1340, x1: 2480, color: '#c9a86a' },
+    { id: 'rf-pool',  label: 'プール',         en: 'INFINITY POOL',  x0: 2480, x1: 4220, color: '#5bc4f5' },
+    { id: 'rf-fire',  label: 'ファイヤーピット', en: 'FIRE PIT',     x0: 4220, x1: 5430, color: '#F0705F' },
+    { id: 'rf-bar',   label: 'スカイバー',     en: 'SKY BAR',        x0: 5430, x1: 6910, color: '#E8B84B' },
+    { id: 'rf-elev',  label: 'EV',             en: 'ELEVATOR',       x0: 6910, x1: 7100, color: '#9aa6c8' }
+  ];
+  /* エレベーター乗り場(足元座標・両フロア共通X) */
+  var ELEV_SPOT = [7008, 1008];
+  /* RFの休憩スポット(足元座標) */
+  var RF_BREAK_SPOTS = [
+    [1640, 985], [1985, 1005], [2210, 962],          /* サンデッキ・望遠鏡 */
+    [2860, 940], [3320, 948], [3820, 942],           /* プールサイド */
+    [4590, 1005], [5060, 1008], [4830, 1052],        /* ファイヤーピット */
+    [5730, 990], [5890, 990], [6050, 990],           /* バーカウンター */
+    [6520, 1030], [6700, 1000]                       /* ラウンジソファ */
+  ];
+
+  /* ============================================================
      夜景(パララックス遠景レイヤー): 4800 x 1100
      パン時に室内の約0.3倍で動き、奥行きを出す。
      ============================================================ */
@@ -108,13 +137,71 @@
     s.push('<radialGradient id="fMoonGlow" cx="0.5" cy="0.5" r="0.5">' +
       '<stop offset="0" stop-color="#fdf6d8" stop-opacity="0.9"/><stop offset="0.35" stop-color="#fdf6d8" stop-opacity="0.25"/>' +
       '<stop offset="1" stop-color="#fdf6d8" stop-opacity="0"/></radialGradient>');
+    /* --- 昼夜サイクル用の空・海・太陽 --- */
+    s.push('<linearGradient id="fSkyMorning" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#3c4d80"/><stop offset="0.45" stop-color="#8a6f9e"/>' +
+      '<stop offset="0.75" stop-color="#e8956a"/><stop offset="1" stop-color="#ffcb8f"/></linearGradient>');
+    s.push('<linearGradient id="fSkyDay" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#4f9fdd"/><stop offset="0.6" stop-color="#93cceb"/>' +
+      '<stop offset="1" stop-color="#cfe9f8"/></linearGradient>');
+    s.push('<linearGradient id="fSkyEvening" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#3a2f63"/><stop offset="0.42" stop-color="#8f4a6d"/>' +
+      '<stop offset="0.72" stop-color="#e0674a"/><stop offset="1" stop-color="#ffab58"/></linearGradient>');
+    s.push('<linearGradient id="fSeaMorning" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#57749f"/><stop offset="1" stop-color="#243c5c"/></linearGradient>');
+    s.push('<linearGradient id="fSeaDay" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#3d80b4"/><stop offset="1" stop-color="#1d537f"/></linearGradient>');
+    s.push('<linearGradient id="fSeaEvening" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#8a5468"/><stop offset="1" stop-color="#33234a"/></linearGradient>');
+    s.push('<radialGradient id="fSunGlow" cx="0.5" cy="0.5" r="0.5">' +
+      '<stop offset="0" stop-color="#ffe9c0" stop-opacity="0.95"/><stop offset="0.4" stop-color="#ffce8a" stop-opacity="0.35"/>' +
+      '<stop offset="1" stop-color="#ffce8a" stop-opacity="0"/></radialGradient>');
+    s.push('<radialGradient id="fSunGlowEve" cx="0.5" cy="0.5" r="0.5">' +
+      '<stop offset="0" stop-color="#ffb070" stop-opacity="0.95"/><stop offset="0.45" stop-color="#ff8a50" stop-opacity="0.35"/>' +
+      '<stop offset="1" stop-color="#ff8a50" stop-opacity="0"/></radialGradient>');
     s.push('<filter id="fBlurS" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>');
     s.push('<filter id="fBlurM" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>');
     s.push('</defs>');
 
-    /* 夜空 */
+    /* 夜空(ベース) */
     s.push('<rect x="0" y="0" width="4800" height="640" fill="url(#fSky)"/>');
-    /* 星 */
+
+    /* ---- 昼夜サイクル: 空のシーンレイヤー(scene--* クラスで2秒フェード) ---- */
+    /* 朝: 朝焼け+低い太陽 */
+    s.push('<g class="office-scenelayer office-scenelayer--morning">' +
+      '<rect x="0" y="0" width="4800" height="640" fill="url(#fSkyMorning)"/>' +
+      '<circle cx="920" cy="470" r="200" fill="url(#fSunGlow)"/>' +
+      '<circle cx="920" cy="470" r="44" fill="#ffe2ae"/>' +
+      '<ellipse cx="2200" cy="240" rx="220" ry="26" fill="#ffd9b0" opacity="0.35"/>' +
+      '<ellipse cx="3400" cy="180" rx="180" ry="20" fill="#ffe6c8" opacity="0.3"/>' +
+      '</g>');
+    /* 昼: 青空+高い太陽+ゆっくり流れる雲 */
+    s.push('<g class="office-scenelayer office-scenelayer--day">' +
+      '<rect x="0" y="0" width="4800" height="640" fill="url(#fSkyDay)"/>' +
+      '<circle cx="1350" cy="130" r="150" fill="url(#fSunGlow)"/>' +
+      '<circle cx="1350" cy="130" r="34" fill="#fff8de"/>' +
+      '<g class="office-cloud"><ellipse cx="600" cy="180" rx="120" ry="30" fill="#fff" opacity="0.85"/>' +
+      '<ellipse cx="680" cy="160" rx="80" ry="26" fill="#fff" opacity="0.8"/>' +
+      '<ellipse cx="530" cy="165" rx="66" ry="22" fill="#fff" opacity="0.75"/></g>' +
+      '<g class="office-cloud office-cloud--2"><ellipse cx="2400" cy="120" rx="150" ry="32" fill="#fff" opacity="0.8"/>' +
+      '<ellipse cx="2500" cy="100" rx="90" ry="26" fill="#fff" opacity="0.75"/></g>' +
+      '<g class="office-cloud office-cloud--3"><ellipse cx="3800" cy="220" rx="110" ry="26" fill="#fff" opacity="0.75"/>' +
+      '<ellipse cx="3880" cy="204" rx="70" ry="20" fill="#fff" opacity="0.7"/></g>' +
+      '</g>');
+    /* 夕: 茜色+沈む太陽+富士山シルエット(遠景) */
+    s.push('<g class="office-scenelayer office-scenelayer--evening">' +
+      '<rect x="0" y="0" width="4800" height="640" fill="url(#fSkyEvening)"/>' +
+      '<circle cx="700" cy="540" r="230" fill="url(#fSunGlowEve)"/>' +
+      '<circle cx="700" cy="540" r="52" fill="#ffb070"/>' +
+      '<ellipse cx="2600" cy="200" rx="260" ry="22" fill="#5a3a5a" opacity="0.5"/>' +
+      '<ellipse cx="3900" cy="150" rx="200" ry="18" fill="#6a4260" opacity="0.45"/>' +
+      /* 富士山(遠景シルエット・雪冠) */
+      '<path d="M240 600 L520 448 Q560 430 600 448 L880 600 Z" fill="#2c2244" opacity="0.9"/>' +
+      '<path d="M472 474 L520 448 Q560 430 600 448 L648 474 Q604 492 560 478 Q516 492 472 474 Z" fill="#e8def0" opacity="0.85"/>' +
+      '</g>');
+
+    /* 星・月(夜のみ) */
+    s.push('<g class="office-nightsky">');
     var st = [[120,120],[300,80],[500,180],[650,60],[840,140],[1030,90],[1220,200],[1420,70],[1620,150],[1800,100],[2020,60],[2210,170],[2400,110],[2590,80],[2800,190],[2980,140],[3140,70],[3310,160],[3520,100],[3700,180],[3900,90],[4080,150],[4260,70],[4440,190],[4620,120],[400,240],[1180,260],[1900,230],[2700,250],[3460,240],[4180,230],[910,220],[2460,220],[4560,250]];
     for (var i = 0; i < st.length; i++) {
       s.push('<circle class="office-star office-star--' + (i % 3) + '" cx="' + st[i][0] + '" cy="' + st[i][1] + '" r="' + (i % 4 === 0 ? 2.4 : 1.5) + '" fill="#dfe8ff"/>');
@@ -122,6 +209,7 @@
     /* 月 */
     s.push('<circle cx="4290" cy="150" r="110" fill="url(#fMoonGlow)"/>');
     s.push('<circle cx="4290" cy="150" r="34" fill="#f6eecb"/><circle cx="4302" cy="140" r="7" fill="#e8dfb4" opacity="0.7"/><circle cx="4278" cy="160" r="5" fill="#e8dfb4" opacity="0.6"/>');
+    s.push('</g>');
     /* 飛行機(点滅しつつ横断) */
     s.push('<g class="office-plane"><rect x="-14" y="-2" width="28" height="4" rx="2" fill="#9aa6c8"/>' +
       '<circle class="office-plane__beacon" cx="0" cy="-4" r="3" fill="#ff5a4e"/></g>');
@@ -154,9 +242,11 @@
         }
       }
     }
+    s.push('<g class="office-citylights">');
     for (var wI = 0; wI < wins.length; wI++) {
       s.push('<rect class="office-win office-win--' + (wI % 5) + '" x="' + wins[wI][0] + '" y="' + wins[wI][1] + '" width="9" height="6" rx="1" fill="' + (wI % 7 === 0 ? '#ffe9a8' : '#f5c86a') + '" opacity="0.85"/>');
     }
+    s.push('</g>');
 
     /* 観覧車(コスモクロック風・虹色電飾・回転) */
     var FW_X = 2070, FW_Y = 400, FW_R = 155;
@@ -172,29 +262,106 @@
       var gx = FW_X + Math.cos(ang) * FW_R, gy = FW_Y + Math.sin(ang) * FW_R;
       s.push('<line x1="' + FW_X + '" y1="' + FW_Y + '" x2="' + gx.toFixed(1) + '" y2="' + gy.toFixed(1) + '" stroke="#39446e" stroke-width="2.5"/>');
       var col = RAINBOW[k % 8];
-      s.push('<circle cx="' + gx.toFixed(1) + '" cy="' + gy.toFixed(1) + '" r="11" fill="' + col + '"/>' +
-        '<circle cx="' + gx.toFixed(1) + '" cy="' + gy.toFixed(1) + '" r="16" fill="' + col + '" opacity="0.45" filter="url(#fBlurS)"/>');
+      /* ゴンドラ(構造・常時)+虹色電飾(夜のみ) */
+      s.push('<circle cx="' + gx.toFixed(1) + '" cy="' + gy.toFixed(1) + '" r="11" fill="#2c3560"/>');
+      s.push('<g class="office-wheellights"><circle cx="' + gx.toFixed(1) + '" cy="' + gy.toFixed(1) + '" r="11" fill="' + col + '"/>' +
+        '<circle cx="' + gx.toFixed(1) + '" cy="' + gy.toFixed(1) + '" r="16" fill="' + col + '" opacity="0.45" filter="url(#fBlurS)"/></g>');
     }
     s.push('<circle cx="' + FW_X + '" cy="' + FW_Y + '" r="26" fill="#1b2246" stroke="#ffd88a" stroke-width="4"/>');
     s.push('</g>');
-    s.push('<circle class="office-wheel-glow" cx="' + FW_X + '" cy="' + FW_Y + '" r="' + FW_R + '" fill="none" stroke="#ffd88a" stroke-width="2" opacity="0.5" stroke-dasharray="8 22"/>');
+    s.push('<g class="office-wheellights"><circle class="office-wheel-glow" cx="' + FW_X + '" cy="' + FW_Y + '" r="' + FW_R + '" fill="none" stroke="#ffd88a" stroke-width="2" opacity="0.5" stroke-dasharray="8 22"/></g>');
     s.push('</g>');
 
     /* 港の水面(反射)— 下端まで塗る(室内床の裏に隠れる) */
     s.push('<rect x="0" y="600" width="4800" height="500" fill="url(#fSea)"/>');
+    /* 昼夜サイクル: 海のシーンレイヤー */
+    s.push('<g class="office-scenelayer office-scenelayer--morning">' +
+      '<rect x="0" y="600" width="4800" height="500" fill="url(#fSeaMorning)"/>');
+    var mg = [[300, 636], [700, 668], [1050, 646], [1500, 690], [2100, 650], [2700, 676], [3300, 640], [3900, 686], [4400, 655], [860, 704], [1900, 706], [3020, 706]];
+    for (var mi = 0; mi < mg.length; mi++) {
+      s.push('<rect class="office-glint office-glint--' + (mi % 3) + '" x="' + mg[mi][0] + '" y="' + mg[mi][1] + '" width="80" height="3.5" rx="1.75" fill="#ffe3b8" opacity="0.7"/>');
+    }
+    s.push('<rect x="820" y="604" width="200" height="130" fill="#ffd9a0" opacity="0.22" filter="url(#fBlurM)"/></g>');
+    s.push('<g class="office-scenelayer office-scenelayer--day">' +
+      '<rect x="0" y="600" width="4800" height="500" fill="url(#fSeaDay)"/>');
+    var dg = [[500, 650], [1400, 680], [2300, 645], [3200, 690], [4100, 660], [1850, 705]];
+    for (var di = 0; di < dg.length; di++) {
+      s.push('<rect class="office-glint office-glint--' + (di % 3) + '" x="' + dg[di][0] + '" y="' + dg[di][1] + '" width="70" height="3" rx="1.5" fill="#e8f6ff" opacity="0.55"/>');
+    }
+    s.push('</g>');
+    s.push('<g class="office-scenelayer office-scenelayer--evening">' +
+      '<rect x="0" y="600" width="4800" height="500" fill="url(#fSeaEvening)"/>' +
+      /* 夕日の海面反射(光の道) */
+      '<rect x="600" y="604" width="200" height="136" fill="#ff9a5a" opacity="0.35" filter="url(#fBlurM)"/>' +
+      '<rect class="office-glint office-glint--1" x="620" y="640" width="160" height="4" rx="2" fill="#ffc9a0" opacity="0.7"/>' +
+      '<rect class="office-glint office-glint--2" x="650" y="680" width="110" height="3.5" rx="1.75" fill="#ffb885" opacity="0.6"/>' +
+      '</g>');
+    /* ネオンの水面反射(夜・夕のみ) */
+    s.push('<g class="office-citylights">');
     for (var rk = 0; rk < 8; rk++) {
       s.push('<rect class="office-refl office-refl--' + (rk % 4) + '" x="' + (FW_X - 120 + rk * 32) + '" y="604" width="14" height="' + (56 + (rk % 3) * 26) + '" fill="' + RAINBOW[rk] + '" opacity="0.25" filter="url(#fBlurS)"/>');
     }
     s.push('<rect class="office-refl office-refl--1" x="3320" y="604" width="46" height="96" fill="#f5c86a" opacity="0.20" filter="url(#fBlurS)"/>');
     s.push('<rect class="office-refl office-refl--2" x="4266" y="604" width="48" height="120" fill="#f6eecb" opacity="0.22" filter="url(#fBlurS)"/>');
+    s.push('</g>');
+    s.push('<g class="office-nightsky">');
     var gl = [[220, 640], [760, 690], [1340, 655], [2560, 640], [3060, 700], [3760, 660], [4460, 690], [1840, 705], [4060, 650]];
     for (var g2 = 0; g2 < gl.length; g2++) {
       s.push('<rect class="office-glint office-glint--' + (g2 % 3) + '" x="' + gl[g2][0] + '" y="' + gl[g2][1] + '" width="70" height="3" rx="1.5" fill="#9db6e8" opacity="0.5"/>');
     }
+    s.push('</g>');
     /* 手前の埠頭ライン */
     s.push('<rect x="0" y="726" width="4800" height="14" fill="#0a0f24"/>');
     s.push('</svg>');
     return s.join('');
+  }
+
+  /* ============================================================
+     共通パーツ: エレベーター(両フロア右端・同位置)と
+     昼夜サイクルの室内ウォッシュ(色被せ)レイヤー
+     ============================================================ */
+  function elevatorSVG(domId, floorLabel, blurId) {
+    return '<g id="' + domId + '">' +
+      '<ellipse cx="7014" cy="1062" rx="96" ry="14" fill="#000" opacity="0.3" filter="url(#' + blurId + ')"/>' +
+      /* シャフト(ガラス+真鍮) */
+      '<rect x="6925" y="470" width="178" height="592" rx="4" fill="#10131f" stroke="#1c2030" stroke-width="3"/>' +
+      '<rect x="6933" y="478" width="162" height="576" fill="#aac8e8" opacity="0.05"/>' +
+      '<path d="M6940 486 L6972 486 L6950 1052 L6933 1052 Z" fill="#dce8ff" opacity="0.06"/>' +
+      '<rect x="6913" y="444" width="202" height="30" rx="6" fill="#14100d"/>' +
+      '<rect x="6913" y="470" width="202" height="4" fill="#ffdf9e" opacity="0.6"/>' +
+      /* 階数表示 */
+      '<rect x="6964" y="700" width="100" height="44" rx="7" fill="#0e0f16" stroke="url(#oBrass)" stroke-width="2.5"/>' +
+      '<text x="7014" y="731" text-anchor="middle" font-size="24" fill="#ffce6a" font-family="sans-serif" font-weight="bold" letter-spacing="2">' + floorLabel + '</text>' +
+      '<circle class="office-beacon" cx="6950" cy="722" r="4" fill="#38B764"/>' +
+      /* カゴ内(扉が開くと見える・暖色) */
+      '<rect x="6947" y="762" width="134" height="292" rx="3" fill="#241d2e"/>' +
+      '<ellipse cx="7014" cy="790" rx="52" ry="20" fill="url(#oLampGlow)" filter="url(#' + blurId + ')"/>' +
+      '<rect x="6947" y="1040" width="134" height="14" fill="#161020"/>' +
+      /* 扉(is-openで左右へスライド) */
+      '<g class="office-elev-doors">' +
+      '<rect class="office-elev-door office-elev-door--l" x="6947" y="762" width="67" height="292" fill="#39304a" stroke="#1c1826" stroke-width="2"/>' +
+      '<rect class="office-elev-door office-elev-door--r" x="7014" y="762" width="67" height="292" fill="#39304a" stroke="#1c1826" stroke-width="2"/>' +
+      '</g>' +
+      /* 真鍮の開口フレーム */
+      '<rect x="6941" y="756" width="146" height="304" rx="4" fill="none" stroke="url(#oBrass)" stroke-width="5"/>' +
+      '<text x="7014" y="640" text-anchor="middle" font-size="13" fill="#c9a86a" font-family="sans-serif" letter-spacing="3" opacity="0.85">1F &#8645; RF</text>' +
+      '</g>';
+  }
+  function sceneWashSVG(width, outdoor) {
+    var a = outdoor ? 1.25 : 1;
+    return '<g class="office-scenelayer office-scenelayer--morning" pointer-events="none">' +
+      '<rect x="0" y="86" width="' + width + '" height="1014" fill="#ffd9a8" opacity="' + (0.10 * a).toFixed(3) + '"/>' +
+      '<path d="M400 86 L700 86 L340 1100 L40 1100 Z" fill="#ffe9c8" opacity="0.07"/>' +
+      '<path d="M2400 86 L2700 86 L2340 1100 L2040 1100 Z" fill="#ffe9c8" opacity="0.06"/>' +
+      '<path d="M4600 86 L4900 86 L4540 1100 L4240 1100 Z" fill="#ffe9c8" opacity="0.06"/>' +
+      '</g>' +
+      '<g class="office-scenelayer office-scenelayer--day" pointer-events="none">' +
+      '<rect x="0" y="86" width="' + width + '" height="1014" fill="#e6f0ff" opacity="' + (0.13 * a).toFixed(3) + '"/>' +
+      '</g>' +
+      '<g class="office-scenelayer office-scenelayer--evening" pointer-events="none">' +
+      '<rect x="0" y="86" width="' + width + '" height="1014" fill="#ff9a5a" opacity="' + (0.12 * a).toFixed(3) + '"/>' +
+      '<rect x="0" y="86" width="' + width + '" height="380" fill="#ffb070" opacity="0.08"/>' +
+      '</g>';
   }
 
   /* ============================================================
@@ -216,6 +383,13 @@
       '<stop offset="0" stop-color="#aac8e8" stop-opacity="0.16"/><stop offset="1" stop-color="#aac8e8" stop-opacity="0.05"/></linearGradient>');
     s.push('<linearGradient id="oBarTop" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0" stop-color="#2c2c34"/><stop offset="1" stop-color="#17171d"/></linearGradient>');
+    /* 大理石(受付カウンター)と真鍮 */
+    s.push('<linearGradient id="oMarble" x1="0" y1="0" x2="0.3" y2="1">' +
+      '<stop offset="0" stop-color="#f4f1ea"/><stop offset="0.45" stop-color="#e2ddd2"/>' +
+      '<stop offset="0.75" stop-color="#efece4"/><stop offset="1" stop-color="#cfc9bc"/></linearGradient>');
+    s.push('<linearGradient id="oBrass" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#e8c983"/><stop offset="0.5" stop-color="#c9a86a"/>' +
+      '<stop offset="1" stop-color="#8a6a3a"/></linearGradient>');
     s.push('<linearGradient id="oWater" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0" stop-color="#2a6a8a" stop-opacity="0.85"/><stop offset="1" stop-color="#123a52" stop-opacity="0.92"/></linearGradient>');
     s.push('<radialGradient id="oPool" cx="0.5" cy="0.5" r="0.5">' +
@@ -270,7 +444,7 @@
       s.push('<rect x="0" y="404" width="' + W + '" height="4" fill="#0b0e1d" opacity="0.85"/>');
       s.push('<path d="M120 86 L300 86 L60 740 L-120 740 Z" fill="#dce8ff" opacity="0.05"/>');
       /* 光だまり(暖色・上質) */
-      s.push('<ellipse cx="330" cy="950" rx="300" ry="130" fill="url(#oPool)" filter="url(#oBlurM)"/>');
+      s.push('<g class="office-lights"><ellipse cx="330" cy="950" rx="300" ry="130" fill="url(#oPool)" filter="url(#oBlurM)"/></g>');
       s.push(rug(340, 965, 520, 210, '#5a4a2e'));
       /* 右の壁(受付との間仕切り)+ドアプレート */
       s.push('<rect x="' + (W - 26) + '" y="86" width="26" height="1014" fill="#241c14"/>' +
@@ -387,10 +561,17 @@
     var pools = [[260, 950, 260, 120], [830, 940, 320, 130], [1300, 935, 330, 130], [2070, 950, 380, 135],
       [2590, 950, 170, 100], [2960, 935, 330, 130], [3620, 970, 300, 125], [4120, 965, 280, 120],
       [4680, 950, 280, 120], [5140, 940, 320, 125], [5620, 950, 170, 100], [6080, 960, 280, 120]];
+    s.push('<g class="office-lights">');
     for (var p = 0; p < pools.length; p++) {
       s.push('<ellipse cx="' + pools[p][0] + '" cy="' + pools[p][1] + '" rx="' + pools[p][2] + '" ry="' + pools[p][3] + '" fill="url(#oPool)" filter="url(#oBlurM)"/>');
     }
     s.push('<ellipse cx="2070" cy="960" rx="260" ry="100" fill="url(#oPoolCool)" filter="url(#oBlurM)"/>');
+    s.push('</g>');
+    /* 磨き上げた床のグロス(鏡面の照り) */
+    s.push('<g opacity="0.05" fill="#dce8ff">' +
+      '<path d="M300 740 L700 740 L560 1100 L160 1100 Z"/>' +
+      '<path d="M2300 740 L2540 740 L2400 1100 L2160 1100 Z"/>' +
+      '<path d="M4500 740 L4880 740 L4740 1100 L4360 1100 Z"/></g>');
 
     /* ---- 共通パーツ ---- */
     function shadow(cx, cy, rx, ry) {
@@ -483,12 +664,17 @@
       '<text x="180" y="716" text-anchor="middle" font-size="44" fill="#FFC825" font-family="serif" font-weight="bold" class="office-sign-glow">¥</text>' +
       '<text x="180" y="784" text-anchor="middle" font-size="21" fill="#ffe9a8" font-family="sans-serif" letter-spacing="4" class="office-sign-glow">PIXELYEN</text>' +
       '<text x="180" y="812" text-anchor="middle" font-size="11" fill="#b8a8dd" font-family="sans-serif" letter-spacing="2" opacity="0.8">AI COMPANY — HQ</text></g>');
-    /* 受付カウンター */
+    /* 受付カウンター(大理石+真鍮ディテール) */
     s.push('<g>' + shadow(390, 930, 110, 16) +
-      '<path d="M300 810 L480 810 Q496 810 496 826 L496 912 L284 912 L284 826 Q284 810 300 810 Z" fill="url(#oWalnut)" stroke="#2b1c10" stroke-width="2"/>' +
+      '<path d="M300 810 L480 810 Q496 810 496 826 L496 912 L284 912 L284 826 Q284 810 300 810 Z" fill="url(#oMarble)" stroke="#a9a294" stroke-width="2"/>' +
+      /* 大理石の石目(グレーの脈) */
+      '<path d="M296 828 C 330 842, 360 824, 402 840 C 436 852, 458 838, 490 850" stroke="#b9b2a2" stroke-width="2" fill="none" opacity="0.7"/>' +
+      '<path d="M288 872 C 322 860, 372 884, 420 868 C 452 858, 470 874, 494 866" stroke="#c4bdae" stroke-width="1.5" fill="none" opacity="0.6"/>' +
+      /* 天板(黒御影)+真鍮の縁と巾木 */
       '<rect x="276" y="798" width="228" height="18" rx="8" fill="url(#oBarTop)" stroke="#000" stroke-width="1.5"/>' +
-      '<rect x="276" y="800" width="228" height="4" rx="2" fill="#5a5a66" opacity="0.6"/>' +
-      '<rect x="304" y="836" width="172" height="4" fill="#7a5636" opacity="0.5"/>' +
+      '<rect x="276" y="800" width="228" height="4" rx="2" fill="url(#oBrass)" opacity="0.9"/>' +
+      '<rect x="284" y="904" width="212" height="6" fill="url(#oBrass)" opacity="0.85"/>' +
+      '<rect x="304" y="836" width="172" height="4" fill="url(#oBrass)" opacity="0.7"/>' +
       /* 呼び鈴と芳名帳 */
       '<path d="M446 792 A10 10 0 0 1 466 792 Z" fill="#caa55d"/><rect x="452" y="792" width="8" height="4" fill="#8a6a3a"/>' +
       '<rect x="316" y="786" width="34" height="12" rx="2" fill="#f4efde" transform="rotate(-3 333 792)"/></g>');
@@ -566,7 +752,8 @@
       '<path d="M1752 830 L1786 792 L1812 806 L1844 748 L1868 720" stroke="#1c5a8a" stroke-width="5" fill="none" stroke-linecap="round"/>' +
       '<circle cx="1868" cy="720" r="6" fill="#0e2a44"/>' +
       '<rect x="1752" y="690" width="70" height="8" rx="3" fill="#0e2a44" opacity="0.7"/>' +
-      '<rect x="1752" y="706" width="48" height="6" rx="3" fill="#0e2a44" opacity="0.5"/></g>');
+      '<rect x="1752" y="706" width="48" height="6" rx="3" fill="#0e2a44" opacity="0.5"/>' +
+      '<g id="officeBoardData"></g></g>');
     /* 8人掛けロングテーブル */
     s.push('<g>' + shadow(2085, 962, 300, 28) +
       '<rect x="1810" y="900" width="550" height="42" rx="21" fill="url(#oWalnut)" stroke="#2b1c10" stroke-width="2"/>' +
@@ -619,6 +806,7 @@
         '<rect x="3262" y="' + (ky + 14) + '" width="66" height="7" rx="3" fill="#0e2a44" opacity="0.7"/>' +
         '<rect x="3262" y="' + (ky + 30) + '" width="46" height="6" rx="3" fill="#0e2a44" opacity="0.5"/>');
     }
+    s.push('<g id="officeKpiData"></g>');
     s.push('</g>');
     /* 低めの共有デスク */
     s.push('<g>' + shadow(2942, 972, 130, 18) +
@@ -786,6 +974,7 @@
       '<circle cx="5860" cy="376" r="6" fill="#17171d"/><circle cx="6360" cy="376" r="6" fill="#17171d"/>' +
       '<path d="M5860 385 Q6110 480 6360 385" stroke="#17171d" stroke-width="2.5" fill="none"/>' +
       '<path d="M5860 420 Q6110 540 6360 420" stroke="#17171d" stroke-width="2.5" fill="none"/>');
+    s.push('<g class="office-nightlit">');
     for (var lb = 0; lb <= 8; lb++) {
       var lt2 = lb / 8;
       var lx = 5860 + 500 * lt2;
@@ -798,6 +987,7 @@
           '<circle cx="' + lx.toFixed(1) + '" cy="' + (ly2 + 10).toFixed(1) + '" r="12" fill="#ffd88a" opacity="0.3" filter="url(#oBlurS)"/>');
       }
     }
+    s.push('</g>');
     s.push('</g>');
     /* 屋外ソファ+ローテーブル */
     s.push('<g>' + shadow(6010, 1010, 120, 17) +
@@ -818,11 +1008,309 @@
 
     s.push('</g>'); /* translate(OWNER_W) 終わり */
 
+    /* エレベーター(1F・テラス右端の展望エレベーター) */
+    s.push(elevatorSVG('officeElev1F', '1F', 'oBlurM'));
+
+    /* 昼夜サイクル: 室内の色被せ(朝の斜光/昼の外光/夕日の反射) */
+    s.push(sceneWashSVG(VW, false));
+
     /* 全体の空気(手前をわずかに暗く締める) */
     s.push('<rect x="0" y="1060" width="' + VW + '" height="40" fill="#000" opacity="0.28" filter="url(#oBlurM)"/>');
 
     /* ゾーンの床際ネームプレート(常時表示) */
     ZONES.forEach(function (z) {
+      var cx = (z.x0 + z.x1) / 2;
+      s.push('<text class="office-zlabel" x="' + cx + '" y="1087" text-anchor="middle"' +
+        ' font-family="sans-serif" font-size="17" letter-spacing="1.5"' +
+        ' fill="#e9ecf7" stroke="#060a1c" stroke-width="4" paint-order="stroke" opacity="0.82">' +
+        '<tspan fill="' + z.color + '">&#9679;</tspan> ' + esc(z.en) + ' / ' + esc(z.label) + '</text>');
+    });
+
+    s.push('</svg>');
+    return s.join('');
+  }
+
+  /* ============================================================
+     RFレイヤー: ルーフトップ・スカイラウンジ 7100 x 1100
+     (屋上=天井なし。パラペット越しに夜景/空が透ける)
+     ============================================================ */
+  function buildRoofSVG() {
+    var s = [];
+    s.push('<svg class="office-bg" viewBox="0 0 ' + VW + ' 1100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">');
+
+    s.push('<defs>');
+    s.push('<linearGradient id="rWater" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#3d9cc4"/><stop offset="0.55" stop-color="#2277a0"/><stop offset="1" stop-color="#155a7e"/></linearGradient>');
+    s.push('<radialGradient id="rFireGlow" cx="0.5" cy="0.5" r="0.5">' +
+      '<stop offset="0" stop-color="#ffab58" stop-opacity="0.75"/><stop offset="0.5" stop-color="#ff8a3e" stop-opacity="0.28"/>' +
+      '<stop offset="1" stop-color="#ff8a3e" stop-opacity="0"/></radialGradient>');
+    s.push('<linearGradient id="rBarBack" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#ffca7a" stop-opacity="0.34"/><stop offset="1" stop-color="#b5722e" stop-opacity="0.12"/></linearGradient>');
+    s.push('<radialGradient id="rPool" cx="0.5" cy="0.5" r="0.5">' +
+      '<stop offset="0" stop-color="#ffca7a" stop-opacity="0.30"/><stop offset="0.7" stop-color="#ffb85c" stop-opacity="0.10"/>' +
+      '<stop offset="1" stop-color="#ffb85c" stop-opacity="0"/></radialGradient>');
+    s.push('<pattern id="rDeck" width="220" height="44" patternUnits="userSpaceOnUse" patternTransform="translate(0 744)">' +
+      '<rect width="220" height="44" fill="#5a4028"/>' +
+      '<rect x="0" y="0" width="220" height="20" fill="#65482d"/>' +
+      '<rect x="0" y="22" width="220" height="20" fill="#4e371f"/>' +
+      '<path d="M0 21 L220 21 M0 43 L220 43" stroke="#33230f" stroke-width="2"/>' +
+      '<path d="M110 0 L110 21 M40 22 L40 43 M180 22 L180 43" stroke="#33230f" stroke-width="2"/></pattern>');
+    s.push('<filter id="rBlurS" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>');
+    s.push('<filter id="rBlurM" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="16"/></filter>');
+    s.push('</defs>');
+
+    function sh(cx, cy, rx, ry) {
+      return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + (ry || rx * 0.28) + '" fill="#000" opacity="0.32" filter="url(#rBlurS)"/>';
+    }
+    function rplant(x, y, sc) {
+      sc = sc || 1;
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')">' + sh(0, 4, 34, 10) +
+        '<path d="M-26 0 L26 0 L20 -44 L-20 -44 Z" fill="#2b2620"/><rect x="-22" y="-48" width="44" height="6" rx="2" fill="#3a332b"/>' +
+        '<path d="M0 -44 C-30 -70 -52 -66 -60 -104 C-30 -100 -16 -84 -4 -60 Z" fill="#3f7048"/>' +
+        '<path d="M0 -44 C28 -76 52 -72 62 -112 C30 -106 14 -86 4 -60 Z" fill="#4c8455"/>' +
+        '<path d="M0 -46 C-8 -92 -16 -110 -2 -148 C14 -112 10 -88 4 -58 Z" fill="#579262"/></g>';
+    }
+    function lounger(x, y) {
+      return '<g>' + sh(x, y + 4, 74, 13) +
+        '<path d="M' + (x - 80) + ' ' + (y - 24) + ' L' + (x + 30) + ' ' + (y - 24) + ' L' + (x + 76) + ' ' + (y - 72) + '" stroke="#8a4c34" stroke-width="16" fill="none" stroke-linecap="round"/>' +
+        '<path d="M' + (x - 76) + ' ' + (y - 30) + ' L' + (x + 26) + ' ' + (y - 30) + '" stroke="#a05a3e" stroke-width="7" stroke-linecap="round"/>' +
+        '<line x1="' + (x - 58) + '" y1="' + (y - 16) + '" x2="' + (x - 58) + '" y2="' + y + '" stroke="#5d3021" stroke-width="7"/>' +
+        '<line x1="' + (x + 24) + '" y1="' + (y - 16) + '" x2="' + (x + 24) + '" y2="' + y + '" stroke="#5d3021" stroke-width="7"/>' +
+        '<rect x="' + (x - 76) + '" y="' + (y - 36) + '" width="56" height="11" rx="5" fill="#f4efde" opacity="0.55"/></g>';
+    }
+    function armchair(x, y, col, dark) {
+      return '<g>' + sh(x, y + 4, 40, 11) +
+        '<rect x="' + (x - 34) + '" y="' + (y - 66) + '" width="68" height="38" rx="13" fill="' + col + '"/>' +
+        '<rect x="' + (x - 38) + '" y="' + (y - 36) + '" width="76" height="26" rx="11" fill="' + dark + '"/>' +
+        '<rect x="' + (x - 44) + '" y="' + (y - 48) + '" width="12" height="34" rx="6" fill="' + dark + '"/>' +
+        '<rect x="' + (x + 32) + '" y="' + (y - 48) + '" width="12" height="34" rx="6" fill="' + dark + '"/></g>';
+    }
+    function stool(x, y) {
+      return '<g>' + sh(x, y + 2, 24, 8) +
+        '<ellipse cx="' + x + '" cy="' + (y - 40) + '" rx="22" ry="9" fill="#6e3a28"/>' +
+        '<ellipse cx="' + x + '" cy="' + (y - 44) + '" rx="22" ry="9" fill="#8a4c34"/>' +
+        '<line x1="' + x + '" y1="' + (y - 36) + '" x2="' + x + '" y2="' + (y - 4) + '" stroke="url(#oBrass)" stroke-width="5"/>' +
+        '<ellipse cx="' + x + '" cy="' + (y - 3) + '" rx="14" ry="4" fill="none" stroke="url(#oBrass)" stroke-width="3.5"/></g>';
+    }
+
+    /* ===== パラペット(ガラスの手すり)— 奥の縁 ===== */
+    s.push('<rect x="0" y="588" width="' + VW + '" height="10" fill="#2c2c34"/>');
+    s.push('<rect x="0" y="598" width="' + VW + '" height="142" fill="#aac8e8" opacity="0.09"/>');
+    for (var pp = 40; pp < VW; pp += 236) {
+      s.push('<rect x="' + pp + '" y="598" width="5" height="142" fill="#39446e" opacity="0.8"/>');
+    }
+    s.push('<rect x="0" y="596" width="' + VW + '" height="3" fill="#dce8ff" opacity="0.25"/>');
+
+    /* ===== 床(ウッドデッキ全面) ===== */
+    s.push('<rect x="0" y="740" width="' + VW + '" height="360" fill="#4e371f"/>');
+    s.push('<rect x="0" y="740" width="' + VW + '" height="360" fill="url(#rDeck)" opacity="0.9"/>');
+    /* 夜の光だまり */
+    s.push('<g class="office-lights">' +
+      '<ellipse cx="1800" cy="990" rx="300" ry="120" fill="url(#rPool)" filter="url(#rBlurM)"/>' +
+      '<ellipse cx="4820" cy="1000" rx="300" ry="125" fill="url(#rPool)" filter="url(#rBlurM)"/>' +
+      '<ellipse cx="6100" cy="980" rx="360" ry="130" fill="url(#rPool)" filter="url(#rBlurM)"/></g>');
+
+    /* ===== Zone R1: ヘリポート(0-1340) ===== */
+    s.push('<g>' +
+      '<ellipse cx="660" cy="950" rx="440" ry="138" fill="#3f4450" stroke="#2c3038" stroke-width="5"/>' +
+      '<ellipse cx="660" cy="950" rx="336" ry="102" fill="none" stroke="#e9ecf7" stroke-width="6" stroke-dasharray="46 30" opacity="0.55"/>' +
+      '<text x="660" y="1016" text-anchor="middle" font-size="180" font-family="sans-serif" font-weight="bold" fill="#e9ecf7" opacity="0.82">H</text>');
+    for (var hl = 0; hl < 8; hl++) {
+      var ha = hl * Math.PI / 4;
+      s.push('<circle class="office-helilight office-helilight--' + (hl % 4) + '" cx="' + (660 + Math.cos(ha) * 420).toFixed(1) + '" cy="' + (950 + Math.sin(ha) * 128).toFixed(1) + '" r="7" fill="#ffb54e"/>');
+    }
+    s.push('</g>');
+    /* 吹き流し */
+    s.push('<g>' + sh(140, 862, 20, 7) +
+      '<line x1="140" y1="860" x2="140" y2="700" stroke="#4a4e58" stroke-width="6"/>' +
+      '<g class="office-windsock" style="transform-origin:140px 706px"><path d="M140 700 L226 706 L222 722 L140 718 Z" fill="#F0705F"/>' +
+      '<path d="M162 701.5 L184 703 L184 719.5 L162 718 Z" fill="#f4efde"/></g></g>');
+
+    /* ===== Zone R2: サンデッキ(1340-2480) ===== */
+    s.push(lounger(1620, 1000));
+    s.push(lounger(1950, 1022));
+    /* サイドテーブル+ドリンク */
+    s.push('<g>' + sh(1790, 1010, 26, 8) +
+      '<ellipse cx="1790" cy="982" rx="26" ry="9" fill="url(#oWalnut)"/>' +
+      '<line x1="1790" y1="988" x2="1790" y2="1006" stroke="#241a10" stroke-width="5"/>' +
+      '<rect x="1778" y="964" width="9" height="16" rx="2" fill="#ffd88a" opacity="0.9"/>' +
+      '<rect x="1794" y="966" width="9" height="14" rx="2" fill="#8adfff" opacity="0.85"/></g>');
+    /* パラソル(たたみ気味) */
+    s.push('<g>' + sh(2114, 1004, 18, 6) +
+      '<line x1="2114" y1="1002" x2="2114" y2="790" stroke="#b08d4f" stroke-width="7"/>' +
+      '<path d="M2114 790 L2060 900 L2088 902 L2114 812 L2140 902 L2168 900 Z" fill="#c96f4a"/>' +
+      '<circle cx="2114" cy="786" r="7" fill="#8a6a3a"/></g>');
+    /* 望遠鏡(パラペット際・夜景/海を眺める) */
+    s.push('<g>' + sh(2260, 946, 34, 9) +
+      '<line x1="2260" y1="942" x2="2240" y2="880" stroke="#3a3a44" stroke-width="5"/>' +
+      '<line x1="2260" y1="942" x2="2280" y2="884" stroke="#3a3a44" stroke-width="5"/>' +
+      '<line x1="2260" y1="942" x2="2260" y2="878" stroke="#3a3a44" stroke-width="5"/>' +
+      '<g transform="rotate(-20 2260 872)"><rect x="2222" y="862" width="86" height="18" rx="8" fill="url(#oBrass)" stroke="#7a5f30" stroke-width="2"/>' +
+      '<rect x="2208" y="864" width="18" height="14" rx="5" fill="#8a6a3a"/>' +
+      '<circle cx="2310" cy="871" r="7" fill="#2a2e44" stroke="#b08d4f" stroke-width="2"/></g></g>');
+
+    /* ===== Zone R3: インフィニティプール(2480-4220・キャラ動線の奥) ===== */
+    s.push('<g>' + sh(3350, 916, 620, 26) +
+      '<rect x="2500" y="752" width="1700" height="158" rx="16" fill="#cfc8bb" stroke="#a89f8d" stroke-width="3"/>' +
+      '<rect x="2520" y="766" width="1660" height="130" rx="10" fill="url(#rWater)"/>' +
+      /* インフィニティエッジ(奥の縁が夜景に溶ける) */
+      '<rect x="2520" y="764" width="1660" height="6" fill="#bfe9ff" opacity="0.75" class="office-poolglow"/>' +
+      /* 水面のゆらぎ */
+      '<path class="office-poolwave" d="M2560 800 Q2640 792 2720 800 T2880 800 T3040 800 T3200 800 T3360 800 T3520 800 T3680 800 T3840 800 T4000 800 T4140 800" stroke="#dff4ff" stroke-width="3" fill="none" opacity="0.35"/>' +
+      '<path class="office-poolwave office-poolwave--2" d="M2560 842 Q2650 834 2740 842 T3100 842 T3460 842 T3820 842 T4140 842" stroke="#cfeaff" stroke-width="2.5" fill="none" opacity="0.28"/>' +
+      /* 水中照明(夜) */
+      '<g class="office-nightlit">' +
+      '<circle cx="2760" cy="866" r="16" fill="#9fe0ff" opacity="0.55" filter="url(#rBlurS)"/>' +
+      '<circle cx="3220" cy="866" r="16" fill="#9fe0ff" opacity="0.55" filter="url(#rBlurS)"/>' +
+      '<circle cx="3680" cy="866" r="16" fill="#9fe0ff" opacity="0.55" filter="url(#rBlurS)"/>' +
+      '<circle cx="4080" cy="866" r="16" fill="#9fe0ff" opacity="0.55" filter="url(#rBlurS)"/></g>' +
+      /* 浮き輪 */
+      '<g class="office-float"><circle cx="3070" cy="828" r="24" fill="none" stroke="#F0705F" stroke-width="12"/>' +
+      '<circle cx="3070" cy="828" r="24" fill="none" stroke="#f4efde" stroke-width="12" stroke-dasharray="12 26"/></g>' +
+      /* ラダー */
+      '<g stroke="#c2c6ce" stroke-width="5" fill="none"><path d="M4126 762 L4126 886 M4154 762 L4154 886"/>' +
+      '<path d="M4126 800 L4154 800 M4126 836 L4154 836 M4126 870 L4154 870" stroke-width="4"/></g>' +
+      '</g>');
+
+    /* ===== Zone R4: ファイヤーピット(4220-5430) ===== */
+    s.push('<rect x="4420" y="920" width="800" height="170" rx="20" fill="#6a4a30" opacity="0.35"/>');
+    s.push('<g>' + sh(4820, 995, 70, 20) +
+      '<ellipse cx="4820" cy="985" rx="66" ry="25" fill="#55504a" stroke="#3a352e" stroke-width="4"/>' +
+      '<ellipse cx="4820" cy="982" rx="48" ry="17" fill="#241d15"/>' +
+      '<rect x="4794" y="968" width="30" height="9" rx="4" fill="#6b4a2f" transform="rotate(-14 4809 972)"/>' +
+      '<rect x="4816" y="966" width="30" height="9" rx="4" fill="#5d3f28" transform="rotate(18 4831 970)"/>' +
+      /* 炎(夕・夜のみ) */
+      '<g class="office-firelit">' +
+      '<ellipse cx="4820" cy="942" rx="95" ry="62" fill="url(#rFireGlow)" filter="url(#rBlurM)"/>' +
+      '<path class="office-flame" d="M4806 972 C4796 950 4808 934 4818 916 C4826 934 4840 946 4832 966 C4828 976 4812 978 4806 972 Z" fill="#ff8a3e"/>' +
+      '<path class="office-flame office-flame--2" d="M4814 968 C4808 952 4818 942 4822 928 C4830 944 4834 954 4828 966 C4824 972 4818 972 4814 968 Z" fill="#ffce6a"/>' +
+      '</g></g>');
+    s.push(armchair(4640, 1008, '#5a4632', '#4a3826'));
+    s.push(armchair(5000, 1008, '#5a4632', '#4a3826'));
+    s.push(armchair(4730, 1058, '#6e5640', '#4a3826'));
+    s.push(armchair(4915, 1058, '#6e5640', '#4a3826'));
+    /* ランタン */
+    s.push('<g>' + sh(5120, 1010, 16, 6) +
+      '<rect x="5108" y="964" width="24" height="36" rx="5" fill="#2c2c34" stroke="#17171d" stroke-width="2"/>' +
+      '<circle cx="5120" cy="982" r="7" fill="#ffdf9e"/><ellipse cx="5120" cy="982" rx="18" ry="12" fill="url(#oLampGlow)" filter="url(#rBlurS)"/></g>');
+
+    /* ===== 緑化壁(バーの左外壁) ===== */
+    s.push('<g>' + sh(5495, 1046, 50, 11) +
+      '<rect x="5440" y="640" width="112" height="406" rx="8" fill="#22301f" stroke="#18220f" stroke-width="4"/>');
+    for (var gv = 0; gv < 24; gv++) {
+      var gvx = 5452 + (gv % 4) * 24, gvy = 654 + Math.floor(gv / 4) * 62;
+      var gvc = ['#3f7048', '#4c8455', '#579262', '#65a06a'][gv % 4];
+      s.push('<ellipse cx="' + (gvx + 10) + '" cy="' + (gvy + 16) + '" rx="14" ry="11" fill="' + gvc + '"/>' +
+        '<ellipse cx="' + (gvx + 18) + '" cy="' + (gvy + 28) + '" rx="10" ry="8" fill="' + gvc + '" opacity="0.8"/>');
+    }
+    s.push('</g>');
+
+    /* ===== Zone R5: スカイバー(ガラスの箱型ラウンジ 5560-6900) ===== */
+    /* 屋根スラブ+エッジ照明 */
+    s.push('<rect x="5540" y="556" width="1380" height="36" rx="8" fill="#14100d"/>');
+    s.push('<rect x="5540" y="588" width="1380" height="8" fill="#ffca7a" opacity="0.35" filter="url(#rBlurS)"/>');
+    /* ガラス壁+方立 */
+    s.push('<rect x="5548" y="592" width="1364" height="456" fill="#aac8e8" opacity="0.07"/>');
+    for (var bm = 5548; bm <= 6912; bm += 272) {
+      s.push('<rect x="' + (bm - 4) + '" y="592" width="8" height="456" fill="#0b0e1d"/>');
+    }
+    s.push('<path d="M5640 600 L5760 600 L5640 1040 L5520 1040 Z" fill="#dce8ff" opacity="0.05"/>');
+    s.push('<path d="M6560 600 L6640 600 L6520 1040 L6440 1040 Z" fill="#dce8ff" opacity="0.05"/>');
+    /* 室内の空気(わずかに暖色) */
+    s.push('<rect x="5556" y="740" width="1348" height="330" fill="#2a1c10" opacity="0.30"/>');
+    /* ネオンサイン */
+    s.push('<text x="6230" y="646" text-anchor="middle" font-size="26" fill="#ffce6a" font-family="sans-serif" letter-spacing="8" class="office-sign-glow">SKY BAR</text>');
+    /* 酒棚(バックライト) */
+    s.push('<g>' + sh(5920, 872, 240, 16) +
+      '<rect x="5640" y="640" width="560" height="224" rx="6" fill="#241c14" stroke="#17100c" stroke-width="3"/>' +
+      '<g class="office-nightlit"><rect x="5652" y="652" width="536" height="200" fill="url(#rBarBack)"/></g>' +
+      '<rect x="5652" y="742" width="536" height="6" fill="#17100c"/>' +
+      '<rect x="5652" y="846" width="536" height="6" fill="#17100c"/>');
+    var btlCols = ['#c9862e', '#7a4a3a', '#4a6a58', '#9aa64e', '#5a7a9a', '#a05a4a', '#caa55d', '#6a4a5a'];
+    for (var bt = 0; bt < 15; bt++) {
+      var btx = 5672 + bt * 34;
+      s.push('<rect x="' + btx + '" y="' + (698 - (bt % 3) * 8) + '" width="14" height="' + (42 + (bt % 3) * 8) + '" rx="4" fill="' + btlCols[bt % 8] + '"/>' +
+        '<rect x="' + (btx + 4) + '" y="' + (688 - (bt % 3) * 8) + '" width="6" height="12" fill="' + btlCols[bt % 8] + '"/>');
+    }
+    for (var bt2 = 0; bt2 < 15; bt2++) {
+      var btx2 = 5672 + bt2 * 34;
+      s.push('<rect x="' + btx2 + '" y="' + (804 - (bt2 % 2) * 6) + '" width="14" height="' + (40 + (bt2 % 2) * 6) + '" rx="4" fill="' + btlCols[(bt2 + 3) % 8] + '"/>');
+    }
+    s.push('</g>');
+    /* バーカウンター(黒御影+真鍮+ウォールナット) */
+    s.push('<g>' + sh(5975, 986, 380, 22) +
+      '<rect x="5620" y="882" width="710" height="96" rx="4" fill="url(#oWalnut)" stroke="#2b1c10" stroke-width="2"/>' +
+      '<rect x="5600" y="862" width="750" height="22" rx="9" fill="url(#oBarTop)" stroke="#000" stroke-width="1.5"/>' +
+      '<rect x="5600" y="864" width="750" height="4" rx="2" fill="url(#oBrass)" opacity="0.9"/>' +
+      '<rect x="5620" y="962" width="710" height="5" fill="url(#oBrass)" opacity="0.7"/>' +
+      /* グラス・シェイカー・カクテル */
+      '<path d="M5760 842 L5784 842 L5772 858 Z" fill="#bcd7ff" opacity="0.85"/><line x1="5772" y1="858" x2="5772" y2="866" stroke="#bcd7ff" stroke-width="2.5"/>' +
+      '<rect x="5920" y="836" width="16" height="26" rx="5" fill="#8f959e"/>' +
+      '<rect x="6080" y="842" width="12" height="20" rx="3" fill="#ffd88a" opacity="0.9"/>' +
+      '<path d="M6210 844 L6234 844 L6222 860 Z" fill="#ff9ac9" opacity="0.85"/><line x1="6222" y1="860" x2="6222" y2="866" stroke="#bcd7ff" stroke-width="2.5"/></g>');
+    s.push(stool(5730, 1000)); s.push(stool(5890, 1000)); s.push(stool(6050, 1000));
+    /* ペンダントライト x3(屋根から) */
+    for (var pd = 0; pd < 3; pd++) {
+      var pdx = 5780 + pd * 210;
+      s.push('<g><line x1="' + pdx + '" y1="592" x2="' + pdx + '" y2="700" stroke="#2a2c38" stroke-width="3"/>' +
+        '<path d="M' + (pdx - 20) + ' 718 L' + (pdx - 6) + ' 700 L' + (pdx + 6) + ' 700 L' + (pdx + 20) + ' 718 Z" fill="#1c1c22" stroke="#3a3a44" stroke-width="2"/>' +
+        '<ellipse cx="' + pdx + '" cy="718" rx="18" ry="5" fill="#ffdf9e"/>' +
+        '<ellipse cx="' + pdx + '" cy="728" rx="32" ry="18" fill="url(#oLampGlow)" filter="url(#rBlurS)"/></g>');
+    }
+    /* ラウンジソファ+ローテーブル+スタンドライト */
+    s.push('<g>' + sh(6560, 1046, 130, 18) +
+      '<rect x="6440" y="948" width="240" height="36" rx="10" fill="#3c3552"/>' +
+      '<rect x="6432" y="976" width="256" height="46" rx="14" fill="#4a4266"/>' +
+      '<rect x="6424" y="958" width="18" height="56" rx="9" fill="#332c48"/><rect x="6678" y="958" width="18" height="56" rx="9" fill="#332c48"/>' +
+      '<rect x="6462" y="982" width="58" height="24" rx="9" fill="#E8B84B" opacity="0.55"/><rect x="6538" y="982" width="58" height="24" rx="9" fill="#5e5678" opacity="0.9"/><rect x="6612" y="982" width="46" height="24" rx="9" fill="#8a4c34" opacity="0.7"/></g>');
+    s.push('<g>' + sh(6560, 1078, 50, 10) +
+      '<ellipse cx="6560" cy="1054" rx="52" ry="13" fill="url(#oWalnut)"/>' +
+      '<rect x="6536" y="1062" width="8" height="14" fill="#241a10"/><rect x="6578" y="1062" width="8" height="14" fill="#241a10"/>' +
+      '<circle cx="6580" cy="1046" r="6" fill="#8a6a4a"/><rect x="6540" y="1042" width="18" height="9" rx="2" fill="#f4efde"/></g>');
+    s.push('<g>' + sh(6790, 1014, 24, 8) +
+      '<line x1="6790" y1="1012" x2="6790" y2="876" stroke="url(#oBrass)" stroke-width="5"/>' +
+      '<path d="M6766 876 L6814 876 L6804 848 L6776 848 Z" fill="#caa55d"/>' +
+      '<ellipse cx="6790" cy="878" rx="22" ry="6" fill="#ffdf9e"/>' +
+      '<ellipse cx="6790" cy="902" rx="48" ry="36" fill="url(#oLampGlow)" filter="url(#rBlurM)"/></g>');
+
+    /* ===== ストリングライト(サンデッキ〜ファイヤーピット・3スパン) ===== */
+    var slPoles = [1360, 2500, 4210, 5430];
+    s.push('<g>');
+    for (var sp2 = 0; sp2 < slPoles.length; sp2++) {
+      s.push('<line x1="' + slPoles[sp2] + '" y1="1050" x2="' + slPoles[sp2] + '" y2="416" stroke="#2c2c34" stroke-width="8"/>' +
+        '<circle cx="' + slPoles[sp2] + '" cy="412" r="6" fill="#17171d"/>');
+    }
+    for (var spn = 0; spn < slPoles.length - 1; spn++) {
+      var xa = slPoles[spn], xb = slPoles[spn + 1];
+      s.push('<path d="M' + xa + ' 420 Q' + ((xa + xb) / 2) + ' ' + (420 + (xb - xa) * 0.10) + ' ' + xb + ' 420" stroke="#17171d" stroke-width="2.5" fill="none"/>');
+      s.push('<g class="office-nightlit">');
+      for (var bl2 = 1; bl2 < 9; bl2++) {
+        var t3 = bl2 / 9;
+        var bx3 = xa + (xb - xa) * t3;
+        var by3 = 420 + Math.sin(Math.PI * t3) * (xb - xa) * 0.05 + 10;
+        s.push('<circle class="office-blb office-blb--' + (bl2 % 4) + '" cx="' + bx3.toFixed(1) + '" cy="' + by3.toFixed(1) + '" r="6" fill="#ffdf9e"/>' +
+          '<circle cx="' + bx3.toFixed(1) + '" cy="' + by3.toFixed(1) + '" r="12" fill="#ffd88a" opacity="0.3" filter="url(#rBlurS)"/>');
+      }
+      s.push('</g>');
+    }
+    s.push('</g>');
+
+    /* 植栽(夜風でゆらぐ) */
+    s.push('<g class="office-sway" style="transform-origin:1385px 1040px">' + rplant(1385, 1040, 1.1) + '</g>');
+    s.push('<g class="office-sway office-sway--2" style="transform-origin:4265px 1030px">' + rplant(4265, 1030, 0.95) + '</g>');
+    s.push('<g class="office-sway office-sway--3" style="transform-origin:6900px 1042px">' + rplant(6900, 1042, 1.0) + '</g>');
+
+    /* エレベーター(RF) */
+    s.push(elevatorSVG('officeElevRF', 'RF', 'rBlurM'));
+
+    /* 昼夜サイクル: 屋外ウォッシュ */
+    s.push(sceneWashSVG(VW, true));
+
+    /* 手前を締める */
+    s.push('<rect x="0" y="1060" width="' + VW + '" height="40" fill="#000" opacity="0.28" filter="url(#rBlurM)"/>');
+
+    /* ゾーンの床際ネームプレート */
+    RF_ZONES.forEach(function (z) {
       var cx = (z.x0 + z.x1) / 2;
       s.push('<text class="office-zlabel" x="' + cx + '" y="1087" text-anchor="middle"' +
         ' font-family="sans-serif" font-size="17" letter-spacing="1.5"' +
@@ -894,6 +1382,13 @@
   var sceneEl = root.querySelector('.office-scene');
   sceneEl.innerHTML = '';
   sceneEl.setAttribute('tabindex', '0');
+  /* overflow:hidden の器はフォーカス移動で内部スクロールされ得る
+     (2フロア化で上下にもはみ出すため顕在化)。位置はtransformで
+     管理しているので、内部スクロールは常に0へ戻す */
+  sceneEl.addEventListener('scroll', function () {
+    sceneEl.scrollLeft = 0;
+    sceneEl.scrollTop = 0;
+  });
 
   /* 遠景(パララックス)レイヤー */
   var farEl = document.createElement('div');
@@ -903,12 +1398,32 @@
 
   var worldEl = document.createElement('div');
   worldEl.className = 'office-world';
-  worldEl.innerHTML = buildInteriorSVG();
   sceneEl.appendChild(worldEl);
+
+  /* 2フロア構造: RF(上)+1F(下)を縦に積み、translateYで切替 */
+  var floorsEl = document.createElement('div');
+  floorsEl.className = 'office-floors';
+  worldEl.appendChild(floorsEl);
+
+  var rfEl = document.createElement('div');
+  rfEl.className = 'office-floor office-floor--rf';
+  rfEl.innerHTML = buildRoofSVG();
+  floorsEl.appendChild(rfEl);
+
+  var f1El = document.createElement('div');
+  f1El.className = 'office-floor office-floor--1f';
+  f1El.innerHTML = buildInteriorSVG();
+  floorsEl.appendChild(f1El);
 
   var stageEl = document.createElement('div');
   stageEl.className = 'office-stage';
-  worldEl.appendChild(stageEl);
+  f1El.appendChild(stageEl);
+
+  var rfStageEl = document.createElement('div');
+  rfStageEl.className = 'office-stage';
+  rfEl.appendChild(rfStageEl);
+
+  var curFloor = '1f';
 
   var hudEl = document.createElement('div');
   hudEl.className = 'office-hud';
@@ -999,24 +1514,112 @@
   dragNote.textContent = '← ドラッグで移動 →';
   sceneEl.appendChild(dragNote);
 
-  /* ---------- ナビゲーション(ゾーンジャンプ+ミニマップ) ---------- */
+  /* ---------- 昼夜サイクル(JST・4シーン・2秒フェード) ---------- */
+  var SCENES = ['morning', 'day', 'evening', 'night'];
+  var SCENE_ICON = { morning: '🌅', day: '☀️', evening: '🌆', night: '🌃' };
+  var SCENE_NAME = { morning: '朝', day: '昼', evening: '夕', night: '夜' };
+  var curScene = null;
+  var scenePreviewTimer = null;
+
+  function jstHourNow() {
+    return new Date(Date.now() + 9 * 3600000).getUTCHours();
+  }
+  function sceneForHour(h) {
+    if (h >= 5 && h < 10) return 'morning';
+    if (h >= 10 && h < 16) return 'day';
+    if (h >= 16 && h < 19) return 'evening';
+    return 'night';
+  }
+  /* 検証用: window.__officeTimeOverride = 時(0-23) または 'morning' 等 */
+  function realScene() {
+    var ov = window.__officeTimeOverride;
+    if (ov != null) {
+      if (typeof ov === 'string' && SCENES.indexOf(ov) >= 0) return ov;
+      var hn = Number(ov);
+      if (!isNaN(hn)) return sceneForHour(((Math.floor(hn) % 24) + 24) % 24);
+    }
+    return sceneForHour(jstHourNow());
+  }
+
+  var timeBtn = document.createElement('button');
+  timeBtn.type = 'button';
+  timeBtn.className = 'office-time-btn';
+  timeBtn.title = 'タップで次の時間帯をプレビュー(10秒で実時刻に戻ります)';
+  sceneEl.appendChild(timeBtn);
+
+  function applyScene(sc) {
+    if (sc === curScene) return;
+    curScene = sc;
+    SCENES.forEach(function (n) { sceneEl.classList.toggle('scene--' + n, n === sc); });
+    timeBtn.innerHTML = SCENE_ICON[sc] + ' <span>' + esc(SCENE_NAME[sc]) + '</span>';
+    timeBtn.setAttribute('aria-label', '現在の時間帯: ' + SCENE_NAME[sc] + '。タップで次の時間帯をプレビュー');
+  }
+  timeBtn.addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    applyScene(SCENES[(SCENES.indexOf(curScene) + 1) % SCENES.length]);
+    timeBtn.classList.add('is-preview');
+    if (scenePreviewTimer) clearTimeout(scenePreviewTimer);
+    scenePreviewTimer = setTimeout(function () {
+      scenePreviewTimer = null;
+      timeBtn.classList.remove('is-preview');
+      applyScene(realScene());
+    }, 10000);
+  });
+  applyScene(realScene());
+
+  /* ---------- フロア切替(1F 執務フロア / RF スカイラウンジ) ---------- */
+  var floorTabsEl = document.createElement('div');
+  floorTabsEl.className = 'office-floortabs';
+  floorTabsEl.setAttribute('aria-label', 'フロア切替');
+  floorTabsEl.innerHTML =
+    '<button type="button" class="office-floortab" data-floor="rf"><b>RF</b><span>スカイラウンジ</span></button>' +
+    '<button type="button" class="office-floortab is-active" data-floor="1f"><b>1F</b><span>執務フロア</span></button>';
+  sceneEl.appendChild(floorTabsEl);
+
+  /* ---------- ナビゲーション(ゾーンジャンプ+ミニマップ・フロア連動) ---------- */
   var navEl = document.createElement('div');
   navEl.className = 'office-nav';
-  var jumpHtml = '<div class="office-jump" role="tablist" aria-label="ゾーンへ移動">';
-  ZONES.forEach(function (z) {
-    jumpHtml += '<button type="button" class="office-jump__chip" data-zone="' + z.id + '"><span class="office-jump__dot" style="background:' + z.color + '"></span>' + esc(z.label) + '</button>';
-  });
-  jumpHtml += '</div>';
-  var mapHtml = '<div class="office-map" aria-label="ミニマップ(クリックで移動)">';
-  ZONES.forEach(function (z) {
-    mapHtml += '<span class="office-map__zone" style="left:' + (z.x0 / VW * 100) + '%;width:' + ((z.x1 - z.x0) / VW * 100) + '%;background:' + z.color + '" title="' + esc(z.label) + '"></span>';
-  });
-  mapHtml += '<span class="office-map__view"></span></div>';
-  navEl.innerHTML = jumpHtml + mapHtml;
+  navEl.innerHTML =
+    '<div class="office-jump" role="tablist" aria-label="ゾーンへ移動"></div>' +
+    '<div class="office-map" aria-label="ミニマップ(クリックで移動)"></div>';
   sceneEl.appendChild(navEl);
   var mapEl = navEl.querySelector('.office-map');
-  var mapViewEl = navEl.querySelector('.office-map__view');
   var jumpEl = navEl.querySelector('.office-jump');
+  var mapViewEl = null;
+
+  function zonesFor() { return curFloor === 'rf' ? RF_ZONES : ZONES; }
+  function renderNav() {
+    var jumpHtml = '';
+    zonesFor().forEach(function (z) {
+      jumpHtml += '<button type="button" class="office-jump__chip" data-zone="' + z.id + '"><span class="office-jump__dot" style="background:' + z.color + '"></span>' + esc(z.label) + '</button>';
+    });
+    jumpEl.innerHTML = jumpHtml;
+    var mapHtml = '';
+    zonesFor().forEach(function (z) {
+      mapHtml += '<span class="office-map__zone" style="left:' + (z.x0 / VW * 100) + '%;width:' + ((z.x1 - z.x0) / VW * 100) + '%;background:' + z.color + '" title="' + esc(z.label) + '"></span>';
+    });
+    mapHtml += '<span class="office-map__view"></span>';
+    mapEl.innerHTML = mapHtml;
+    mapViewEl = mapEl.querySelector('.office-map__view');
+  }
+  renderNav();
+
+  function setFloor(f) {
+    if (curFloor === f) return;
+    curFloor = f;
+    floorsEl.classList.toggle('is-rf', f === 'rf');
+    Array.prototype.forEach.call(floorTabsEl.querySelectorAll('.office-floortab'), function (b) {
+      b.classList.toggle('is-active', b.getAttribute('data-floor') === f);
+    });
+    renderNav();
+    applyPan();
+  }
+  floorTabsEl.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.office-floortab');
+    if (!b) return;
+    ev.stopPropagation();
+    setFloor(b.getAttribute('data-floor'));
+  });
 
   /* ---------- パン/ズーム エンジン ---------- */
   var view = { pan: 0, panY: 0, zoom: 1, vel: 0, worldW: 0, worldH: 0, dragging: false, moved: false, target: null };
@@ -1090,12 +1693,13 @@
     dragNote.classList.add('is-hidden');
   }
 
-  /* ゾーンジャンプ */
+  /* ゾーンジャンプ(現在フロアのゾーンから検索) */
   jumpEl.addEventListener('click', function (ev) {
     var chip = ev.target.closest('.office-jump__chip');
     if (!chip) return;
+    var zs = zonesFor();
     var z = null;
-    for (var i = 0; i < ZONES.length; i++) if (ZONES[i].id === chip.getAttribute('data-zone')) z = ZONES[i];
+    for (var i = 0; i < zs.length; i++) if (zs[i].id === chip.getAttribute('data-zone')) z = zs[i];
     if (z) smoothPanTo((z.x0 + z.x1) / 2);
   });
 
@@ -1127,7 +1731,7 @@
   /* ドラッグ/スワイプ(Pointer Events) */
   var drag = { id: null, lastX: 0, lastT: 0, startX: 0, startY: 0 };
   sceneEl.addEventListener('pointerdown', function (ev) {
-    if (ev.target.closest('.office-panel, .office-hud, .office-zoom, .office-nav, .office-roster, .office-roster-btn')) return;
+    if (ev.target.closest('.office-panel, .office-hud, .office-zoom, .office-nav, .office-roster, .office-roster-btn, .office-floortabs, .office-time-btn')) return;
     drag.id = ev.pointerId;
     drag.lastX = ev.clientX; drag.lastT = performance.now();
     drag.startX = ev.clientX; drag.startY = ev.clientY;
@@ -1189,9 +1793,14 @@
   var STATE_LABEL = {
     work: '🖥 作業中', coffee: '☕ 休憩中', meeting: '💬 会議中',
     wander: '🚶 巡回中', idle: '🌃 ひと息中',
-    break: '🛋 休憩中', read: '📖 読書中', focus: '🎧 集中作業中'
+    break: '🛋 休憩中', read: '📖 読書中', focus: '🎧 集中作業中',
+    rooftop: '🍹 スカイラウンジで休憩中',
+    'lift-up': '🛗 スカイラウンジへ移動中', 'lift-down': '🛗 執務フロアへ戻り中'
   };
-  var STATE_BUBBLE = { work: '💻', coffee: '☕', meeting: '💬', wander: '', idle: '…', break: '🌿', read: '📖', focus: '🎧' };
+  var STATE_BUBBLE = {
+    work: '💻', coffee: '☕', meeting: '💬', wander: '', idle: '…', break: '🌿', read: '📖', focus: '🎧',
+    rooftop: '🍹', 'lift-up': '🛗', 'lift-down': '🛗'
+  };
 
   /* キャラクターSVG(assets/characters/<slug>.svg)を優先し、
      未完成/欠品なら従来のオフィスドット絵にフォールバック */
@@ -1209,23 +1818,35 @@
     el.type = 'button';
     el.className = 'office-emp';
     el.setAttribute('aria-label', e.name + '(' + e.role + ')');
+    /* 磨いた床への鏡面反射(本体と同じ画像を上下反転・フェード) */
+    var refl = document.createElement('img');
+    refl.className = 'office-emp__refl';
+    refl.alt = '';
+    refl.draggable = false;
+    refl.setAttribute('aria-hidden', 'true');
     var img = document.createElement('img');
     img.alt = '';
     img.draggable = false;
+    img.addEventListener('load', function () { refl.src = img.src; });
     setCharSrc(img, e);
     var bub = document.createElement('span');
     bub.className = 'office-emp__bubble';
+    /* 着席時にデスクの手前板が重なる(座ってる感) */
+    var deskFront = document.createElement('span');
+    deskFront.className = 'office-emp__deskfront';
+    el.appendChild(refl);
     el.appendChild(img);
+    el.appendChild(deskFront);
     el.appendChild(bub);
     stageEl.appendChild(el);
 
     var seat = DEPT_SEATS[e.dept][idx % DEPT_SEATS[e.dept].length];
     return {
-      def: e, el: el, img: img, bub: bub,
+      def: e, el: el, img: img, refl: refl, bub: bub,
       seat: null, x: seat[0] + rand(-30, 30), y: seat[1] + rand(-15, 15),
       tx: seat[0], ty: seat[1], state: 'wander', timer: rand(0.5, 3),
       speed: rand(95, 145), facing: 1, activity: null, active: false,
-      typeTimer: 0
+      typeTimer: 0, floor: '1f', transferring: false
     };
   });
 
@@ -1250,7 +1871,69 @@
     em.ty = spot[1] + rand(-(jy || 0), jy || 0);
   }
 
+  /* RFにいる/向かっている人数(勤務優先比率の維持: 常時2〜4名程度) */
+  function rfCount() {
+    var n = 0;
+    emps.forEach(function (e2) { if (e2.floor === 'rf' || e2.state === 'lift-up') n++; });
+    return n;
+  }
+
+  /* エレベーター演出: 両フロアの扉を開閉 */
+  function pingElevator() {
+    ['officeElev1F', 'officeElevRF'].forEach(function (id) {
+      var g = document.getElementById(id);
+      if (!g) return;
+      g.classList.add('is-open');
+      setTimeout(function () { g.classList.remove('is-open'); }, 2200);
+    });
+  }
+
+  /* フロア間移動(エレベーター搭乗 → 反対フロアで降車) */
+  function transferFloor(em, to) {
+    if (em.transferring) return;
+    em.transferring = true;
+    em.el.classList.remove('is-moving');
+    em.el.classList.add('is-inlift');
+    pingElevator();
+    setTimeout(function () {
+      em.floor = to;
+      (to === 'rf' ? rfStageEl : stageEl).appendChild(em.el);
+      em.x = ELEV_SPOT[0]; em.y = ELEV_SPOT[1];
+      if (to === 'rf') {
+        var sp = pick(RF_BREAK_SPOTS);
+        em.state = 'rooftop';
+        em.tx = sp[0] + rand(-14, 14); em.ty = sp[1] + rand(-8, 8);
+        em.timer = rand(15, 30);
+      } else {
+        em.state = 'work';
+        em.tx = em.seat[0]; em.ty = em.seat[1];
+        em.timer = rand(12, 26);
+      }
+      setBubble(em);
+      em.el.style.left = (em.x / VW * 100) + '%';
+      em.el.style.top = (em.y / VH * 100) + '%';
+      setTimeout(function () {
+        em.el.classList.remove('is-inlift');
+        em.transferring = false;
+      }, 450);
+    }, 1000);
+  }
+
   function nextState(em) {
+    /* RF滞在中: しばらく寛いだら1Fへ戻る */
+    if (em.floor === 'rf') {
+      if (Math.random() < 0.45 && rfCount() <= 4) {
+        em.state = 'rooftop';
+        goSpot(em, pick(RF_BREAK_SPOTS), 14, 8);
+        em.timer = rand(12, 26);
+      } else {
+        em.state = 'lift-down';
+        em.tx = ELEV_SPOT[0]; em.ty = ELEV_SPOT[1];
+        em.timer = 999;
+      }
+      setBubble(em);
+      return;
+    }
     if (em.active) {
       /* 稼働中: 90% デスク作業、たまにコーヒー */
       if (Math.random() < 0.9) {
@@ -1262,6 +1945,15 @@
         goSpot(em, pick(COFFEE_SPOTS), 20, 10);
         em.timer = rand(5, 9);
       }
+    } else if (function () {
+      var n = rfCount();
+      var p2 = n < 2 ? 0.28 : (n < 4 ? 0.06 : 0);
+      return Math.random() < p2;
+    }()) {
+      /* たまにエレベーターでスカイラウンジへ(RFは常時2〜4名程度) */
+      em.state = 'lift-up';
+      em.tx = ELEV_SPOT[0]; em.ty = ELEV_SPOT[1];
+      em.timer = 999;
     } else {
       /* 基本は常に勤務(オーナー方針 2026-07-09)。休憩・移動は少数の彩りに留める */
       var roll = Math.random();
@@ -1328,19 +2020,27 @@
     }
 
     emps.forEach(function (em) {
+      if (em.transferring) return; /* エレベーター搭乗中 */
       var dx = em.tx - em.x, dy = em.ty - em.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
+      var moving = false;
       if (dist > 4) {
         var step = em.speed * dt;
         em.x += dx / dist * Math.min(step, dist);
         em.y += dy / dist * Math.min(step, dist);
         if (Math.abs(dx) > 4) em.facing = dx < 0 ? -1 : 1;
         em.el.classList.add('is-moving');
+        moving = true;
       } else {
         em.el.classList.remove('is-moving');
+        /* エレベーター前に到着 → 反対フロアへ */
+        if (em.state === 'lift-up') { transferFloor(em, 'rf'); return; }
+        if (em.state === 'lift-down') { transferFloor(em, '1f'); return; }
         em.timer -= dt;
         if (em.timer <= 0) nextState(em);
       }
+      /* 着席表現(デスク作業中は少し沈み+デスク手前板が重なる) */
+      em.el.classList.toggle('is-sitting', !moving && (em.state === 'work' || em.state === 'focus'));
       /* タイピング演出(作業中は 💻 と ... を切替) */
       if (em.state === 'work') {
         em.typeTimer -= dt;
@@ -1352,7 +2052,9 @@
       em.el.style.left = (em.x / VW * 100) + '%';
       em.el.style.top = (em.y / VH * 100) + '%';
       em.el.style.zIndex = 10 + Math.round(em.y / 4);
-      em.img.style.transform = em.facing < 0 ? 'scaleX(-1)' : '';
+      var flip = em.facing < 0 ? 'scaleX(-1)' : '';
+      em.img.style.transform = flip;
+      em.refl.style.transform = 'scaleY(-1)' + (flip ? ' ' + flip : '');
     });
 
     updateOwner(dt);
@@ -1360,7 +2062,10 @@
   function startLoop() { if (rafId === null) { lastT = null; rafId = requestAnimationFrame(frame); } }
   function stopLoop() { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } }
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) stopLoop(); else startLoop();
+    /* 復帰時は必ず新しいrAFハンドルで再開する
+       (バックグラウンド中に保留rAFが破棄される環境への保険) */
+    stopLoop();
+    if (!document.hidden) startLoop();
   });
 
   /* ---------- ツールチップ / 詳細パネル ---------- */
@@ -1391,11 +2096,23 @@
   }
   function hideTip() { tipEl.classList.remove('is-on'); }
 
-  /* 直近の仕事履歴(activity[slug].recent = ISO時刻の配列・最大3件) */
+  /* 最近の仕事(activity[slug].works = [{at,msg}] 最大3件 = 本物のgitコミット)。
+     works が無い社員は従来どおり recent(セッション時刻)を表示 */
   function historyHtml(em) {
+    var a = em.activity || {};
+    if (a.works && a.works.length) {
+      var wrows = [];
+      a.works.slice(0, 3).forEach(function (w) {
+        if (!w || !w.msg) return;
+        wrows.push('<li><span class="office-panel__hist-at">' + esc(w.at || '') + '</span> ' + esc(w.msg) + '</li>');
+      });
+      if (wrows.length) {
+        return '<div class="office-panel__hist"><p class="office-panel__hist-title">最近の仕事 <small>(実際の作業記録より)</small></p>' +
+          '<ul class="office-panel__hist-list office-panel__hist-list--works">' + wrows.join('') + '</ul></div>';
+      }
+    }
     var html = '<div class="office-panel__hist"><p class="office-panel__hist-title">直近の仕事履歴</p>';
-    var rec = (em.activity && em.activity.recent && em.activity.recent.length)
-      ? em.activity.recent.slice(-3).reverse() : [];
+    var rec = (a.recent && a.recent.length) ? a.recent.slice(-3).reverse() : [];
     var rows = [];
     rec.forEach(function (iso) {
       var st = jstStamp(iso);
@@ -1651,11 +2368,13 @@
     var who = row.getAttribute('data-who');
     closeRoster();
     if (who === 'owner') {
+      setFloor('1f');
       smoothPanTo(owner.x);
       openOwnerPanel();
     } else {
       var em = emps[Number(who)];
       if (em) {
+        setFloor(em.floor === 'rf' ? 'rf' : '1f');
         smoothPanTo(em.x);
         openPanel(em);
       }
@@ -1706,17 +2425,72 @@
     });
   }
 
+  /* ---------- 実データの館内投影(会議室スクリーン+KPIモニター壁) ---------- */
+  function updateDataScreens(d) {
+    try {
+      var board = document.getElementById('officeBoardData');
+      if (board) {
+        var exp = Math.max(0, Math.min(100, d.exp_percent || 0));
+        var hp = Math.max(0, Math.min(100, d.hp_percent || 0));
+        board.innerHTML =
+          '<rect x="1740" y="672" width="140" height="194" rx="3" fill="#0b1626" opacity="0.94"/>' +
+          '<text x="1810" y="700" text-anchor="middle" font-size="14" fill="#8ccfff" font-family="sans-serif" letter-spacing="1.5">PIXELYEN Lv.' + (d.level || 1) + '</text>' +
+          '<text x="1752" y="728" font-size="10" fill="#9db6e8" font-family="sans-serif">EXP</text>' +
+          '<rect x="1752" y="734" width="116" height="10" rx="5" fill="#16324a"/>' +
+          '<rect x="1752" y="734" width="' + Math.max(2, 116 * exp / 100).toFixed(1) + '" height="10" rx="5" fill="#41A6F6"/>' +
+          '<text x="1752" y="762" font-size="10" fill="#9db6e8" font-family="sans-serif">HP</text>' +
+          '<rect x="1752" y="768" width="116" height="10" rx="5" fill="#16324a"/>' +
+          '<rect x="1752" y="768" width="' + Math.max(2, 116 * hp / 100).toFixed(1) + '" height="10" rx="5" fill="#38B764"/>' +
+          '<text x="1752" y="804" font-size="11" fill="#9db6e8" font-family="sans-serif">売上 <tspan fill="#FFC825">' + esc(yen(d.revenue_this_month)) + '</tspan></text>' +
+          '<text x="1752" y="824" font-size="11" fill="#9db6e8" font-family="sans-serif">純利益 <tspan fill="#FFC825">' + esc(yen(d.profit_this_month)) + '</tspan></text>' +
+          '<circle class="office-beacon" cx="1758" cy="848" r="4" fill="#38B764"/>' +
+          '<text x="1768" y="852" font-size="9" fill="#6f88b0" font-family="sans-serif">LIVE</text>';
+      }
+      var kpi = document.getElementById('officeKpiData');
+      if (kpi) {
+        kpi.innerHTML =
+          '<rect x="3192" y="668" width="156" height="58" rx="4" fill="#0b1626" opacity="0.94"/>' +
+          '<text x="3270" y="688" text-anchor="middle" font-size="11" fill="#9db6e8" font-family="sans-serif">今月売上</text>' +
+          '<text x="3270" y="714" text-anchor="middle" font-size="19" font-weight="bold" fill="#FFC825" font-family="sans-serif">' + esc(yen(d.revenue_this_month)) + '</text>' +
+          '<rect x="3192" y="736" width="156" height="58" rx="4" fill="#0b1626" opacity="0.94"/>' +
+          '<text x="3270" y="756" text-anchor="middle" font-size="11" fill="#9db6e8" font-family="sans-serif">純利益</text>' +
+          '<text x="3270" y="782" text-anchor="middle" font-size="19" font-weight="bold" fill="#FFC825" font-family="sans-serif">' + esc(yen(d.profit_this_month)) + '</text>';
+      }
+    } catch (e) { /* 演出。失敗しても本体機能へ影響させない */ }
+  }
+
+  /* 起動時にRFへ2〜3名を先着させる(スカイラウンジに常に人けを) */
+  function seedRooftop() {
+    var cands = emps.filter(function (e2) { return !e2.active && e2.floor !== 'rf'; });
+    for (var i2 = cands.length - 1; i2 > 0; i2--) {
+      var j2 = Math.floor(Math.random() * (i2 + 1));
+      var t2 = cands[i2]; cands[i2] = cands[j2]; cands[j2] = t2;
+    }
+    cands.slice(0, Math.min(2 + Math.floor(Math.random() * 2), cands.length)).forEach(function (em) {
+      em.floor = 'rf';
+      rfStageEl.appendChild(em.el);
+      var sp = pick(RF_BREAK_SPOTS);
+      em.x = sp[0] + rand(-14, 14); em.y = sp[1] + rand(-8, 8);
+      em.tx = em.x; em.ty = em.y;
+      em.state = 'rooftop';
+      em.timer = rand(10, 25);
+      setBubble(em);
+    });
+  }
+
   var DEFAULT_DASH = { level: 1, hp_percent: 0, exp_percent: 0, revenue_this_month: null, profit_this_month: null, activity: {} };
   var DEFAULT_OFFICES = {
     offices: [{ id: 'hq', name: '本店(最上階ペントハウス)', location: '神奈川県横浜市・みなとみらい タワーマンション最上階', unlocked_at_level: 1, scene: 'minatomirai-penthouse' }],
     next_unlock: { level: 2, condition: '月商1万円', teaser: '新オフィス' }
   };
 
-  /* 時計は取得結果を待たずに動かす(データ欠落時も常時動作) */
+  /* 時計は取得結果を待たずに動かす(データ欠落時も常時動作)。
+     1分ごとに時間帯も再判定(プレビュー中はスキップ) */
   renderHUD(DEFAULT_DASH);
   setInterval(function () {
     updateClock();
     renderFresh();
+    if (!scenePreviewTimer) applyScene(realScene());
   }, 60000);
 
   Promise.all([
@@ -1728,19 +2502,23 @@
     renderTabs(res[1] || DEFAULT_OFFICES);
     freshAt = dash.generated_at || null;
     renderFresh();
+    updateDataScreens(dash);
     var act = dash.activity || {};
     emps.forEach(function (em) {
       em.activity = act[em.def.slug] || null;
       em.active = !!(em.activity && em.activity.active_24h);
       nextState(em);
     });
+    seedRooftop();
     startLoop();
   }).catch(function () {
     renderHUD(DEFAULT_DASH);
     renderTabs(DEFAULT_OFFICES);
+    updateDataScreens(DEFAULT_DASH);
     freshAt = null;
     renderFresh();
     emps.forEach(function (em) { nextState(em); });
+    seedRooftop();
     startLoop();
   });
 })();

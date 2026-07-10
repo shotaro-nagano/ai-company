@@ -521,6 +521,8 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 .office-roster,
 .office-roster-btn,
 .office-fresh,
+.office-time-btn,
+.office-floortab,
 .office-hint {
   background: rgba(16, 20, 42, 0.72);
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
@@ -959,6 +961,244 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 .office-dragnote.is-hidden { opacity: 0; }
 
 .office-note { margin-top: 6px; text-align: right; }
+
+/* ============================================================
+   ライブオフィス 第3次大改修:
+   昼夜サイクル(scene--morning/day/evening/night)・
+   2フロア(1F/RFスカイラウンジ)・質感(反射/着席/歩行ロール)
+   ============================================================ */
+
+/* ---- 2フロア構造: RF(上)+1F(下)を縦積みし translateY で切替 ---- */
+.office-floors {
+  position: absolute;
+  left: 0;
+  top: -100%;
+  width: 100%;
+  height: 200%;
+  transform: translateY(0);
+  transition: transform 0.85s cubic-bezier(0.45, 0.05, 0.25, 1);
+  will-change: transform;
+}
+.office-floors.is-rf { transform: translateY(50%); }
+.office-floor {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+}
+.office-floor--rf { top: 0; }
+.office-floor--1f { top: 50%; }
+
+/* フロア切替タブ(縦・左端) */
+.office-floortabs {
+  position: absolute;
+  left: 8px;
+  top: 55%;
+  transform: translateY(-50%);
+  z-index: 165;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.office-floortab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.office-floortab b { font-size: 14px; line-height: 1.1; color: #fff; }
+.office-floortab span { font-size: 9.5px; opacity: 0.75; }
+.office-floortab:hover { background: rgba(40, 48, 84, 0.85); }
+.office-floortab.is-active {
+  border-color: rgba(255, 200, 37, 0.75);
+  background: rgba(58, 47, 20, 0.82);
+  box-shadow: 0 0 12px rgba(255, 200, 37, 0.28);
+}
+.office-floortab.is-active b { color: #FFC825; }
+
+/* 時間帯アイコン+プレビューボタン(名簿ボタンの左) */
+.office-time-btn {
+  position: absolute;
+  top: 12px;
+  right: 128px;
+  z-index: 170;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.office-time-btn span { font-size: 11px; opacity: 0.9; }
+.office-time-btn:hover { background: rgba(40, 48, 84, 0.85); }
+.office-time-btn.is-preview {
+  border-color: rgba(140, 207, 255, 0.8);
+  box-shadow: 0 0 12px rgba(140, 207, 255, 0.35);
+}
+
+/* ---- 昼夜サイクル: シーンレイヤーのフェード(2秒) ---- */
+.office-scenelayer,
+.office-nightsky,
+.office-citylights,
+.office-wheellights,
+.office-nightlit,
+.office-firelit,
+.office-lights {
+  transition: opacity 2s ease;
+}
+.office-scenelayer { opacity: 0; }
+.scene--morning .office-scenelayer--morning,
+.scene--day .office-scenelayer--day,
+.scene--evening .office-scenelayer--evening { opacity: 1; }
+/* 星・月: 夜のみ(夕はうっすら) */
+.scene--morning .office-nightsky,
+.scene--day .office-nightsky { opacity: 0; }
+.scene--evening .office-nightsky { opacity: 0.3; }
+/* ビル窓・ネオン反射: 朝昼は消灯・夕から点き始める */
+.scene--morning .office-citylights { opacity: 0.08; }
+.scene--day .office-citylights { opacity: 0; }
+.scene--evening .office-citylights { opacity: 0.75; }
+/* 観覧車の電飾: 昼は構造だけ */
+.scene--morning .office-wheellights,
+.scene--day .office-wheellights { opacity: 0; }
+.scene--evening .office-wheellights { opacity: 0.85; }
+/* ストリングライト・水中照明・酒棚バックライト等 */
+.scene--morning .office-nightlit,
+.scene--day .office-nightlit { opacity: 0.08; }
+.scene--evening .office-nightlit { opacity: 0.85; }
+/* ファイヤーピットの炎: 夕・夜のみ */
+.scene--morning .office-firelit,
+.scene--day .office-firelit { opacity: 0; }
+/* 室内照明の光だまり: 昼は控えめ・夕から点灯 */
+.scene--morning .office-lights { opacity: 0.5; }
+.scene--day .office-lights { opacity: 0.3; }
+.scene--evening .office-lights { opacity: 0.85; }
+
+/* 昼の雲(ゆっくり流れる) */
+.office-cloud { animation: office-cloud 90s linear infinite alternate; }
+.office-cloud--2 { animation-duration: 120s; animation-delay: -40s; }
+.office-cloud--3 { animation-duration: 75s; animation-delay: -20s; }
+@keyframes office-cloud {
+  from { transform: translateX(0); }
+  to { transform: translateX(220px); }
+}
+
+/* ---- RF スカイラウンジの演出 ---- */
+.office-helilight { animation: office-helilight 2.4s steps(1) infinite; }
+.office-helilight--1 { animation-delay: 0.6s; }
+.office-helilight--2 { animation-delay: 1.2s; }
+.office-helilight--3 { animation-delay: 1.8s; }
+@keyframes office-helilight { 0%, 55% { opacity: 1; } 56%, 99% { opacity: 0.15; } }
+.office-windsock { animation: office-windsock 4.5s ease-in-out infinite; }
+@keyframes office-windsock {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(4deg); }
+}
+.office-poolwave { animation: office-poolwave 7s ease-in-out infinite; }
+.office-poolwave--2 { animation-duration: 9s; animation-delay: -3s; }
+@keyframes office-poolwave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(28px); }
+}
+.office-poolglow { animation: office-poolglow 4s ease-in-out infinite; }
+@keyframes office-poolglow { 0%, 100% { opacity: 0.75; } 50% { opacity: 0.35; } }
+.office-float { animation: office-float 6.5s ease-in-out infinite; }
+@keyframes office-float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, 5px); }
+}
+.office-flame { animation: office-flame 0.85s ease-in-out infinite; transform-origin: 4820px 972px; }
+.office-flame--2 { animation-duration: 0.65s; animation-delay: -0.3s; }
+@keyframes office-flame {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  50% { transform: scaleY(1.2) scaleX(0.94); }
+}
+
+/* エレベーター: 扉の開閉演出 */
+.office-elev-door { transition: transform 0.6s ease-in-out; }
+.is-open .office-elev-door--l { transform: translateX(-64px); }
+.is-open .office-elev-door--r { transform: translateX(64px); }
+
+/* ---- 質感: キャラの床反射・着席・歩行ロール ---- */
+.office-emp { transition: margin-top 0.35s ease, opacity 0.45s ease; }
+.office-emp__refl {
+  position: absolute;
+  top: 99%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleY(-1);
+  opacity: 0.16;
+  filter: blur(1px) saturate(0.75) brightness(1.15);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 42%, rgba(0, 0, 0, 0.9));
+  mask-image: linear-gradient(to bottom, transparent 42%, rgba(0, 0, 0, 0.9));
+}
+/* RFはウッドデッキなので反射は控えめ */
+.office-floor--rf .office-emp__refl { opacity: 0.06; }
+/* 歩行時の軽い左右ロール(transformはJSが使うのでrotateプロパティで) */
+.office-emp.is-moving img { animation: office-walkroll 0.55s ease-in-out infinite; }
+@keyframes office-walkroll {
+  0%, 100% { rotate: -2.6deg; }
+  50% { rotate: 2.6deg; }
+}
+/* 着席: 少し沈み+デスクの手前板が重なる */
+.office-emp.is-sitting { margin-top: 9px; }
+.office-emp__deskfront {
+  display: none;
+  position: absolute;
+  left: -14%;
+  right: -14%;
+  bottom: -6px;
+  height: 32%;
+  z-index: 2;
+  border-radius: 7px 7px 0 0;
+  background: linear-gradient(180deg, #6b4a2f, #3a2517 75%);
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+.office-emp.is-sitting .office-emp__deskfront { display: block; }
+/* エレベーター搭乗中はフェードアウト */
+.office-emp.is-inlift { opacity: 0; }
+
+/* 詳細パネル: 「最近の仕事」(本物のgitコミット) */
+.office-panel__hist-title small { opacity: 0.65; font-size: 9.5px; }
+.office-panel__hist-at {
+  color: #8ccfff;
+  font-family: var(--font-dot);
+  margin-right: 2px;
+  white-space: nowrap;
+}
+.office-panel__hist-list--works { line-height: 1.6; }
+.office-panel__hist-list--works li { margin-bottom: 7px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .office-cloud, .office-helilight, .office-windsock, .office-poolwave,
+  .office-poolglow, .office-float, .office-flame { animation: none; }
+  .office-emp.is-moving img { animation: none; }
+  .office-floors, .office-elev-door { transition: none; }
+  .office-scenelayer, .office-nightsky, .office-citylights, .office-wheellights,
+  .office-nightlit, .office-firelit, .office-lights { transition: none; }
+}
+
+@media (max-width: 640px) {
+  .office-floortabs { left: 6px; top: 52%; gap: 5px; }
+  .office-floortab { padding: 5px 8px; border-radius: 8px; }
+  .office-floortab b { font-size: 12px; }
+  .office-floortab span { display: none; }
+  .office-time-btn { top: 8px; right: 102px; padding: 6px 9px; font-size: 13px; }
+  .office-time-btn span { display: none; }
+}
 
 @media (max-width: 640px) {
   .office-scene { height: min(72vh, 480px); min-height: 340px; }

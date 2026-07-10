@@ -1446,7 +1446,10 @@
     if (!panelEl.contains(ev.target)) closePanel();
   });
 
-  /* ---------- オーナー(人間・社長室常駐/EMPLOYEESとは独立) ---------- */
+  /* ---------- オーナー(人間・社長室常駐/EMPLOYEESとは独立) ----------
+     2026-07-10 オーナー本人の希望によりキャラクター表示は停止(部屋は残す)。
+     「人間の経常労働ゼロ」の体現として、社長室は主なき空席のまま稼働する。 */
+  var OWNER_VISIBLE = false;
   var OWNER_STATE_LABEL = {
     desk: '🗂 デスクで書類を眺めている',
     sofa: '📱 ソファでスマホを見ている',
@@ -1468,7 +1471,11 @@
   ownerBub.className = 'office-emp__bubble';
   ownerEl.appendChild(ownerImg);
   ownerEl.appendChild(ownerBub);
-  stageEl.appendChild(ownerEl);
+  if (OWNER_VISIBLE) {
+    stageEl.appendChild(ownerEl);
+  } else {
+    ownerEl.style.display = 'none';
+  }
 
   var owner = {
     x: OWNER_SPOTS.desk[0], y: OWNER_SPOTS.desk[1],
@@ -1503,6 +1510,7 @@
   }
 
   function updateOwner(dt) {
+    if (!OWNER_VISIBLE) return;
     owner.patrolIn -= dt;
     var dx = owner.tx - owner.x, dy = owner.ty - owner.y;
     var dist = Math.sqrt(dx * dx + dy * dy);
@@ -1592,14 +1600,16 @@
   function renderRoster() {
     var html =
       '<div class="office-roster__head"><strong>👥 社員名簿</strong>' +
-      '<span>' + (emps.length + 1) + '名</span>' +
+      '<span>' + (emps.length + (OWNER_VISIBLE ? 1 : 0)) + '名</span>' +
       '<button type="button" class="office-roster__close" aria-label="閉じる">×</button></div>';
-    /* オーナー(人間) */
-    html += '<button type="button" class="office-roster__row" data-who="owner">' +
-      '<img src="assets/characters/owner.svg" alt="" draggable="false">' +
-      '<span class="office-roster__info"><span class="office-roster__name">オーナー</span>' +
-      '<span class="office-roster__role" style="color:#F4EFDE">人間・最終承認者</span></span>' +
-      '<span class="office-roster__state">' + esc(OWNER_BUBBLE[owner.state] || '👀') + '</span></button>';
+    /* オーナー(人間)— 本人の希望で非表示(経常労働ゼロの体現) */
+    if (OWNER_VISIBLE) {
+      html += '<button type="button" class="office-roster__row" data-who="owner">' +
+        '<img src="assets/characters/owner.svg" alt="" draggable="false">' +
+        '<span class="office-roster__info"><span class="office-roster__name">オーナー</span>' +
+        '<span class="office-roster__role" style="color:#F4EFDE">人間・最終承認者</span></span>' +
+        '<span class="office-roster__state">' + esc(OWNER_BUBBLE[owner.state] || '👀') + '</span></button>';
+    }
     /* AI社員22名 */
     emps.forEach(function (em, i) {
       var e = em.def;

@@ -13,8 +13,11 @@
   var root = document.getElementById('live-office');
   if (!root) return;
 
-  /* ---------- 定数(シーン論理座標: 6400 x 1100) ---------- */
-  var VW = 6400, VH = 1100;
+  /* ---------- 定数(シーン論理座標: 7100 x 1100) ----------
+     左端に社長室(OWNER_W=700)を増設。既存レイアウト(6400幅)は
+     まるごと +700 シフトして再利用する。 */
+  var OWNER_W = 700;
+  var VW = 6400 + OWNER_W, VH = 1100;
   /* 夜景(パララックス遠景)の論理幅と追従率 */
   var FAR_W = 4800, PARALLAX = 0.3;
 
@@ -60,6 +63,9 @@
     { id: 'audit',    label: '監査',        x0: 5490, x1: 5770, color: '#9D85D2' },
     { id: 'terrace',  label: 'テラス',      x0: 5800, x1: 6400, color: '#ffd88a' }
   ];
+  /* 既存ゾーンを社長室ぶん右へシフトし、先頭に社長室を追加 */
+  ZONES.forEach(function (z) { z.x0 += OWNER_W; z.x1 += OWNER_W; });
+  ZONES.unshift({ id: 'owner', label: '社長室', x0: 0, x1: OWNER_W, color: '#F4EFDE' });
 
   /* デスク席(足元座標)— 部門ごと */
   var DEPT_SEATS = {
@@ -75,7 +81,16 @@
   var BREAK_SPOTS   = [[3520, 990], [3625, 1005], [3950, 1000], [4250, 1000], [5960, 985], [6090, 1010], [6230, 975]];
   var READ_SPOTS    = [[4745, 990], [4855, 1020]];
   var FOCUS_SPOTS   = [[2520, 965], [2660, 965]];
-  var WALK_AREA = { x0: 90, x1: 6330, y0: 800, y1: 1055 };
+  /* AI社員は社長室(0-700)には入らない */
+  var WALK_AREA = { x0: OWNER_W + 90, x1: OWNER_W + 6330, y0: 800, y1: 1055 };
+  /* 上記の席・スポット座標(旧6400系)をまとめて +OWNER_W シフト */
+  (function shiftX() {
+    function sh(list) { list.forEach(function (p) { p[0] += OWNER_W; }); }
+    Object.keys(DEPT_SEATS).forEach(function (k) { sh(DEPT_SEATS[k]); });
+    sh(COFFEE_SPOTS); sh(MEETING_SPOTS); sh(BREAK_SPOTS); sh(READ_SPOTS); sh(FOCUS_SPOTS);
+  })();
+  /* 社長室のオーナー定位置(足元座標) */
+  var OWNER_SPOTS = { desk: [330, 930], sofa: [128, 1002], scope: [592, 942] };
 
   /* ============================================================
      夜景(パララックス遠景レイヤー): 4800 x 1100
@@ -187,7 +202,7 @@
      ============================================================ */
   function buildInteriorSVG() {
     var s = [];
-    s.push('<svg class="office-bg" viewBox="0 0 6400 1100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">');
+    s.push('<svg class="office-bg" viewBox="0 0 ' + VW + ' 1100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">');
 
     /* ===== defs ===== */
     s.push('<defs>');
@@ -231,6 +246,103 @@
       '<path d="M0 21 L220 21 M0 43 L220 43" stroke="#33230f" stroke-width="2"/>' +
       '<path d="M110 0 L110 21 M40 22 L40 43 M180 22 L180 43" stroke="#33230f" stroke-width="2"/></pattern>');
     s.push('</defs>');
+
+    /* ==== Zone 0: 社長室(オーナーの執務室 0-700)— 特別感のある角部屋 ==== */
+    (function ownerRoom() {
+      var W = OWNER_W;
+      /* 床(寄木+上質な深色トーン)と天井 */
+      s.push('<rect x="0" y="740" width="' + W + '" height="360" fill="url(#oFloor)"/>');
+      s.push('<rect x="0" y="740" width="' + W + '" height="360" fill="url(#oHerring)" opacity="0.85"/>');
+      s.push('<rect x="0" y="740" width="' + W + '" height="360" fill="#1a0f08" opacity="0.18"/>');
+      s.push('<rect x="0" y="740" width="' + W + '" height="70" fill="#8fb2ee" opacity="0.07"/>');
+      s.push('<rect x="0" y="0" width="' + W + '" height="86" fill="#14100d"/>');
+      s.push('<rect x="0" y="80" width="' + W + '" height="10" fill="#ffca7a" opacity="0.35" filter="url(#oBlurM)"/>');
+      s.push('<rect x="0" y="84" width="' + W + '" height="3" fill="#ffdf9e" opacity="0.8"/>');
+      s.push('<circle cx="180" cy="52" r="12" fill="#241d15"/><circle cx="180" cy="56" r="7" fill="#ffdf9e"/>' +
+        '<circle cx="180" cy="60" r="18" fill="#ffdf9e" opacity="0.3" filter="url(#oBlurS)"/>');
+      s.push('<circle cx="470" cy="52" r="12" fill="#241d15"/><circle cx="470" cy="56" r="7" fill="#ffdf9e"/>' +
+        '<circle cx="470" cy="60" r="18" fill="#ffdf9e" opacity="0.3" filter="url(#oBlurS)"/>');
+      /* 全面ガラス(方立+サッシ) */
+      s.push('<rect x="-5" y="86" width="10" height="656" fill="#0b0e1d"/>' +
+        '<rect x="315" y="86" width="10" height="656" fill="#0b0e1d"/>' +
+        '<rect x="635" y="86" width="10" height="656" fill="#0b0e1d"/>');
+      s.push('<rect x="0" y="736" width="' + W + '" height="8" fill="#0b0e1d"/>');
+      s.push('<rect x="0" y="404" width="' + W + '" height="4" fill="#0b0e1d" opacity="0.85"/>');
+      s.push('<path d="M120 86 L300 86 L60 740 L-120 740 Z" fill="#dce8ff" opacity="0.05"/>');
+      /* 光だまり(暖色・上質) */
+      s.push('<ellipse cx="330" cy="950" rx="300" ry="130" fill="url(#oPool)" filter="url(#oBlurM)"/>');
+      s.push(rug(340, 965, 520, 210, '#5a4a2e'));
+      /* 右の壁(受付との間仕切り)+ドアプレート */
+      s.push('<rect x="' + (W - 26) + '" y="86" width="26" height="1014" fill="#241c14"/>' +
+        '<rect x="' + (W - 26) + '" y="86" width="5" height="1014" fill="#3a2f22"/>');
+      s.push('<g><rect x="' + (W - 208) + '" y="560" width="150" height="52" rx="8" fill="#1a1420" stroke="#c9a86a" stroke-width="2.5"/>' +
+        '<text x="' + (W - 133) + '" y="582" text-anchor="middle" font-size="13" fill="#e8d9b0" font-family="sans-serif" letter-spacing="2">OWNER&#8217;S OFFICE</text>' +
+        '<text x="' + (W - 133) + '" y="601" text-anchor="middle" font-size="13" fill="#c9a86a" font-family="sans-serif" letter-spacing="4">社長室</text></g>');
+      s.push('<text x="330" y="672" text-anchor="middle" font-size="16" fill="#e8d9b0" font-family="sans-serif" letter-spacing="5" opacity="0.75">OWNER&#8217;S OFFICE</text>');
+      /* 会社のビジョン額装「ピクセルを、円に。」 */
+      s.push('<g>' + shadow(150, 880, 60, 10) +
+        '<rect x="60" y="690" width="180" height="96" rx="5" fill="#241c12" stroke="#c9a86a" stroke-width="4"/>' +
+        '<rect x="72" y="702" width="156" height="72" rx="3" fill="#f4efde"/>' +
+        '<text x="150" y="738" text-anchor="middle" font-size="19" fill="#1A1C2C" font-family="serif" font-weight="bold" letter-spacing="2">ピクセルを、円に。</text>' +
+        '<text x="150" y="762" text-anchor="middle" font-size="9" fill="#8a7a5a" font-family="sans-serif" letter-spacing="2">PIXELYEN — OUR VISION</text>' +
+        '<line x1="105" y1="786" x2="98" y2="874" stroke="#241c12" stroke-width="5"/><line x1="195" y1="786" x2="202" y2="874" stroke="#241c12" stroke-width="5"/></g>');
+      /* トロフィー棚(まだほぼ空・建国記念の盾のみ) */
+      s.push('<g>' + shadow(540, 838, 86, 11) +
+        '<rect x="450" y="690" width="182" height="148" rx="6" fill="#33241a" stroke="#211710" stroke-width="3"/>' +
+        '<rect x="458" y="742" width="166" height="5" fill="#211710"/>' +
+        '<rect x="458" y="792" width="166" height="5" fill="#211710"/>' +
+        /* 建国記念の小さな盾 */
+        '<path d="M486 706 L512 706 L512 728 Q499 740 486 728 Z" fill="#c9a86a" stroke="#8a6a3a" stroke-width="2"/>' +
+        '<text x="499" y="722" text-anchor="middle" font-size="8" fill="#3a2517" font-family="sans-serif">建国</text>' +
+        '<text x="566" y="775" text-anchor="middle" font-size="9" fill="#6a5a44" font-family="sans-serif" letter-spacing="1">COMING SOON…</text>' +
+        '<text x="540" y="826" text-anchor="middle" font-size="9" fill="#6a5a44" font-family="sans-serif" letter-spacing="2">TROPHIES</text></g>');
+      /* エグゼクティブデスク(ウォールナット一枚板) */
+      s.push('<g>' + shadow(330, 902, 190, 22) +
+        '<path d="M150 844 C 225 834, 435 834, 510 846 L 505 876 C 425 866, 235 866, 155 874 Z" fill="url(#oWalnut)" stroke="#2b1c10" stroke-width="2"/>' +
+        '<path d="M155 846 C 250 839, 420 839, 502 848" stroke="#7a5636" stroke-width="2.5" fill="none" opacity="0.8"/>' +
+        '<path d="M160 854 C 260 847, 410 847, 498 856" stroke="#8a6540" stroke-width="1.5" fill="none" opacity="0.5"/>' +
+        '<rect x="186" y="872" width="14" height="36" fill="#241a10"/><rect x="462" y="872" width="14" height="36" fill="#241a10"/>' +
+        /* 決裁書類・ノートPC・コーヒー */
+        '<rect x="218" y="836" width="40" height="12" rx="1.5" fill="#f4efde" transform="rotate(-4 238 842)"/>' +
+        '<rect x="224" y="830" width="40" height="12" rx="1.5" fill="#e8dfc4" transform="rotate(3 244 836)"/>' +
+        '<path d="M300 842 L344 842 L340 822 L304 822 Z" fill="#2a2e44"/><rect x="298" y="842" width="48" height="5" rx="2" fill="#3a3e56"/>' +
+        '<rect x="386" y="828" width="15" height="15" rx="3" fill="#f4efde"/><rect x="386" y="828" width="15" height="4" rx="2" fill="#8a6a4a"/>' +
+        '<path class="office-steam" d="M393 822 C 389 814, 397 810, 393 802" stroke="#dfe8ff" stroke-width="2" fill="none" opacity="0.55"/>' +
+        /* 承認スタンプ(✅の象徴) */
+        '<rect x="430" y="834" width="12" height="10" rx="2" fill="#38B764"/><rect x="433" y="828" width="6" height="8" rx="2" fill="#2a8a4c"/></g>');
+      /* ハイバックチェア */
+      s.push('<g>' + shadow(330, 972, 36, 10) +
+        '<rect x="304" y="880" width="52" height="72" rx="14" fill="#241f26"/>' +
+        '<rect x="309" y="886" width="42" height="58" rx="11" fill="#332c36"/>' +
+        '<rect x="300" y="944" width="60" height="15" rx="7" fill="#241f26"/>' +
+        '<line x1="330" y1="958" x2="330" y2="968" stroke="#494952" stroke-width="5"/>' +
+        '<path d="M312 972 L348 972" stroke="#494952" stroke-width="5"/></g>');
+      /* 応接ソファセット+ローテーブル */
+      s.push('<g>' + shadow(130, 1035, 84, 13) +
+        '<rect x="56" y="962" width="150" height="32" rx="10" fill="#5a4632"/>' +
+        '<rect x="50" y="988" width="162" height="42" rx="12" fill="#6e5640"/>' +
+        '<rect x="44" y="972" width="16" height="52" rx="8" fill="#4a3826"/><rect x="202" y="972" width="16" height="52" rx="8" fill="#4a3826"/>' +
+        '<rect x="70" y="994" width="50" height="20" rx="8" fill="#c9a86a" opacity="0.55"/><rect x="140" y="994" width="50" height="20" rx="8" fill="#8a6a4a" opacity="0.7"/></g>');
+      s.push('<g>' + shadow(262, 1052, 52, 11) +
+        '<ellipse cx="262" cy="1028" rx="54" ry="14" fill="url(#oWalnut)"/>' +
+        '<rect x="238" y="1038" width="8" height="16" fill="#241a10"/><rect x="280" y="1038" width="8" height="16" fill="#241a10"/>' +
+        '<rect x="242" y="1016" width="18" height="9" rx="2" fill="#f4efde"/>' +
+        '<circle cx="284" cy="1021" r="6" fill="#8a6a4a"/><path class="office-steam office-steam--2" d="M284 1011 C 280 1003, 288 999, 284 991" stroke="#dfe8ff" stroke-width="2" fill="none" opacity="0.5"/></g>');
+      /* 望遠鏡(窓際・みなとみらいを眺める) */
+      s.push('<g>' + shadow(600, 946, 34, 9) +
+        '<line x1="600" y1="942" x2="580" y2="880" stroke="#3a3a44" stroke-width="5"/>' +
+        '<line x1="600" y1="942" x2="620" y2="884" stroke="#3a3a44" stroke-width="5"/>' +
+        '<line x1="600" y1="942" x2="600" y2="878" stroke="#3a3a44" stroke-width="5"/>' +
+        '<g transform="rotate(-22 600 872)"><rect x="562" y="862" width="86" height="18" rx="8" fill="#b08d4f" stroke="#7a5f30" stroke-width="2"/>' +
+        '<rect x="548" y="864" width="18" height="14" rx="5" fill="#8a6a3a"/>' +
+        '<circle cx="650" cy="871" r="7" fill="#2a2e44" stroke="#b08d4f" stroke-width="2"/></g></g>');
+      /* 高級観葉植物+スタンドライト */
+      s.push(standLamp(510, 986));
+      s.push(plant(40, 918, 1.2, 'olive'));
+    })();
+
+    /* 既存レイアウト(旧6400系)を社長室ぶん右へ */
+    s.push('<g transform="translate(' + OWNER_W + ' 0)">');
 
     var INT_END = 5800; /* 室内はここまで。以降はテラス(屋外) */
 
@@ -704,8 +816,10 @@
     /* デッキの光だまり(電球色) */
     s.push('<ellipse cx="6110" cy="990" rx="260" ry="110" fill="url(#oPool)" filter="url(#oBlurM)" opacity="0.8"/>');
 
+    s.push('</g>'); /* translate(OWNER_W) 終わり */
+
     /* 全体の空気(手前をわずかに暗く締める) */
-    s.push('<rect x="0" y="1060" width="6400" height="40" fill="#000" opacity="0.28" filter="url(#oBlurM)"/>');
+    s.push('<rect x="0" y="1060" width="' + VW + '" height="40" fill="#000" opacity="0.28" filter="url(#oBlurM)"/>');
 
     s.push('</svg>');
     return s.join('');
@@ -972,7 +1086,7 @@
   window.addEventListener('resize', layout);
   layout();
   /* 初期位置: エントランスがちらっと入りつつ経営ラウンジが見える位置 */
-  view.pan = -(view.worldW * 0.04);
+  view.pan = -(view.worldW * ((OWNER_W + 260) / VW));
   clampPan(); applyPan();
 
   /* ---------- 社員スプライト ---------- */
@@ -1144,6 +1258,8 @@
       em.el.style.zIndex = 10 + Math.round(em.y / 4);
       em.img.style.transform = em.facing < 0 ? 'scaleX(-1)' : '';
     });
+
+    updateOwner(dt);
   }
   function startLoop() { if (rafId === null) { lastT = null; rafId = requestAnimationFrame(frame); } }
   function stopLoop() { if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; } }
@@ -1214,6 +1330,131 @@
   });
   sceneEl.addEventListener('click', function (ev) {
     if (!panelEl.contains(ev.target)) closePanel();
+  });
+
+  /* ---------- オーナー(人間・社長室常駐/EMPLOYEESとは独立) ---------- */
+  var OWNER_STATE_LABEL = {
+    desk: '🗂 デスクで書類を眺めている',
+    sofa: '📱 ソファでスマホを見ている',
+    scope: '🔭 望遠鏡でみなとみらいを眺めている',
+    patrol: '🚶 たまの見回り(フロアを一周)'
+  };
+  var OWNER_BUBBLE = { desk: '☕', sofa: '📱', scope: '🔭', patrol: '👀' };
+
+  var ownerEl = document.createElement('button');
+  ownerEl.type = 'button';
+  ownerEl.className = 'office-emp office-emp--owner';
+  ownerEl.setAttribute('aria-label', 'オーナー(人間・最終承認者)');
+  var ownerImg = document.createElement('img');
+  ownerImg.alt = '';
+  ownerImg.draggable = false;
+  ownerImg.onerror = function () { ownerImg.onerror = null; ownerEl.style.display = 'none'; };
+  ownerImg.src = 'assets/characters/owner.svg';
+  var ownerBub = document.createElement('span');
+  ownerBub.className = 'office-emp__bubble';
+  ownerEl.appendChild(ownerImg);
+  ownerEl.appendChild(ownerBub);
+  stageEl.appendChild(ownerEl);
+
+  var owner = {
+    x: OWNER_SPOTS.desk[0], y: OWNER_SPOTS.desk[1],
+    tx: OWNER_SPOTS.desk[0], ty: OWNER_SPOTS.desk[1],
+    state: 'desk', timer: rand(14, 24), speed: 70, facing: 1,
+    route: null, routeIdx: 0,
+    patrolIn: rand(480, 720) /* 約10分に1回、フロアを一周 */
+  };
+  ownerBub.textContent = OWNER_BUBBLE.desk;
+
+  function ownerNextState() {
+    if (owner.patrolIn <= 0) {
+      owner.patrolIn = rand(480, 720);
+      owner.state = 'patrol';
+      owner.route = [
+        [OWNER_W + 200, 990], [OWNER_W + 1400, 1000], [OWNER_W + 2800, 1010],
+        [OWNER_W + 4300, 1000], [OWNER_W + 5900, 990], [OWNER_W + 4300, 1015],
+        [OWNER_W + 2000, 995], [OWNER_W + 200, 985],
+        [OWNER_SPOTS.desk[0], OWNER_SPOTS.desk[1]]
+      ];
+      owner.routeIdx = 0;
+      owner.tx = owner.route[0][0]; owner.ty = owner.route[0][1];
+    } else {
+      var states = ['desk', 'sofa', 'scope'].filter(function (st) { return st !== owner.state; });
+      owner.state = pick(states);
+      var sp = OWNER_SPOTS[owner.state];
+      owner.tx = sp[0]; owner.ty = sp[1];
+      owner.timer = rand(18, 34); /* ゆったり切替 */
+      owner.route = null;
+    }
+    ownerBub.textContent = OWNER_BUBBLE[owner.state] || '';
+  }
+
+  function updateOwner(dt) {
+    owner.patrolIn -= dt;
+    var dx = owner.tx - owner.x, dy = owner.ty - owner.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 4) {
+      var step = owner.speed * dt;
+      owner.x += dx / dist * Math.min(step, dist);
+      owner.y += dy / dist * Math.min(step, dist);
+      if (Math.abs(dx) > 4) owner.facing = dx < 0 ? -1 : 1;
+      ownerEl.classList.add('is-moving');
+    } else if (owner.route) {
+      owner.routeIdx++;
+      if (owner.routeIdx < owner.route.length) {
+        owner.tx = owner.route[owner.routeIdx][0];
+        owner.ty = owner.route[owner.routeIdx][1];
+      } else {
+        owner.route = null;
+        owner.state = 'desk';
+        owner.timer = rand(18, 34);
+        ownerBub.textContent = OWNER_BUBBLE.desk;
+      }
+    } else {
+      ownerEl.classList.remove('is-moving');
+      owner.timer -= dt;
+      if (owner.timer <= 0) ownerNextState();
+    }
+    ownerEl.style.left = (owner.x / VW * 100) + '%';
+    ownerEl.style.top = (owner.y / VH * 100) + '%';
+    ownerEl.style.zIndex = 10 + Math.round(owner.y / 4);
+    ownerImg.style.transform = owner.facing < 0 ? 'scaleX(-1)' : '';
+  }
+
+  function showOwnerTip() {
+    if (view.dragging) return;
+    tipEl.innerHTML =
+      '<strong>オーナー(人間)</strong><small> / 最終承認者</small><br>' +
+      '<span class="office-tip__dept" style="color:#F4EFDE">●</span> 社長室<br>' +
+      esc(OWNER_STATE_LABEL[owner.state] || '👀 見守り中') + ' — 経常労働ゼロで見守り中';
+    tipEl.classList.add('is-on');
+    var w = sceneEl.clientWidth;
+    var x = view.pan + owner.x / VW * view.worldW;
+    var y = view.panY + owner.y / VH * view.worldH;
+    tipEl.style.left = Math.max(6, Math.min(w - tipEl.offsetWidth - 6, x - tipEl.offsetWidth / 2)) + 'px';
+    tipEl.style.top = Math.max(6, y - (ownerEl.offsetHeight + tipEl.offsetHeight + 14)) + 'px';
+  }
+
+  function openOwnerPanel() {
+    panelEl.innerHTML =
+      '<button type="button" class="office-panel__close" aria-label="閉じる">×</button>' +
+      '<img class="office-panel__avatar" src="assets/characters/owner.svg" alt="オーナーのアバター">' +
+      '<p class="office-panel__name dot">オーナー</p>' +
+      '<p class="office-panel__role">人間・法的責任と最終承認者 <span class="office-panel__dept" style="border-color:#F4EFDE;color:#F4EFDE">社長室</span></p>' +
+      '<p class="office-panel__blurb">この会社で唯一の人間。仕事は✅を押すことと、確定申告。</p>' +
+      '<p class="office-panel__act">👀 見守り中(経常労働 0分/月 目標) — ' + esc(OWNER_STATE_LABEL[owner.state] || '') + '</p>' +
+      '<p><a href="https://github.com/shotaro-nagano/ai-company/blob/main/README.md" rel="noopener">会社のREADMEを見る(GitHub)→</a></p>';
+    panelEl.classList.add('is-open');
+    panelEl.querySelector('.office-panel__close').addEventListener('click', closePanel);
+  }
+
+  ownerEl.addEventListener('mouseenter', showOwnerTip);
+  ownerEl.addEventListener('mouseleave', hideTip);
+  ownerEl.addEventListener('focus', showOwnerTip);
+  ownerEl.addEventListener('blur', hideTip);
+  ownerEl.addEventListener('click', function (ev) {
+    if (view.moved) return;
+    ev.stopPropagation();
+    openOwnerPanel();
   });
 
   /* ---------- HUD ---------- */

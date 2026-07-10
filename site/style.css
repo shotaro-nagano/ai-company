@@ -493,6 +493,10 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+/* オーナー(人間): 生成りクリームの淡い存在感 */
+.office-emp--owner img {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 7px rgba(244, 239, 222, 0.28));
+}
 .office-emp.is-working img { animation: office-bounce 0.9s steps(2) infinite; }
 @keyframes office-bounce { 0%, 49% { translate: 0 0; } 50%, 99% { translate: 0 -3px; } }
 .office-emp__bubble {

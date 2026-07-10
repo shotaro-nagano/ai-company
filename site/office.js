@@ -51,21 +51,21 @@
 
   /* ゾーン定義(ミニマップ/ジャンプ用) */
   var ZONES = [
-    { id: 'entrance', label: '受付',        x0: 0,    x1: 520,  color: '#c9a86a' },
-    { id: 'exec',     label: '経営',        x0: 520,  x1: 1080, color: '#E8B84B' },
-    { id: 'studio',   label: 'プロダクト',  x0: 1080, x1: 1700, color: '#5BB8F5' },
-    { id: 'board',    label: '大会議室',    x0: 1700, x1: 2440, color: '#8fb2ee' },
-    { id: 'booth',    label: '集中ブース',  x0: 2450, x1: 2730, color: '#9aa6c8' },
-    { id: 'growth',   label: 'グロース',    x0: 2740, x1: 3400, color: '#F0705F' },
-    { id: 'refresh',  label: 'リフレッシュ', x0: 3420, x1: 4400, color: '#6fd0a8' },
-    { id: 'library',  label: 'ライブラリ',  x0: 4420, x1: 4940, color: '#c08a5a' },
-    { id: 'corp',     label: 'コーポレート', x0: 4960, x1: 5480, color: '#5BC98A' },
-    { id: 'audit',    label: '監査',        x0: 5490, x1: 5770, color: '#9D85D2' },
-    { id: 'terrace',  label: 'テラス',      x0: 5800, x1: 6400, color: '#ffd88a' }
+    { id: 'entrance', label: '受付',        en: 'ENTRANCE',       x0: 0,    x1: 520,  color: '#c9a86a' },
+    { id: 'exec',     label: '経営',        en: 'EXECUTIVE',      x0: 520,  x1: 1080, color: '#E8B84B' },
+    { id: 'studio',   label: 'プロダクト',  en: 'PRODUCT STUDIO', x0: 1080, x1: 1700, color: '#5BB8F5' },
+    { id: 'board',    label: '大会議室',    en: 'BOARD ROOM',     x0: 1700, x1: 2440, color: '#8fb2ee' },
+    { id: 'booth',    label: '集中ブース',  en: 'FOCUS BOOTH',    x0: 2450, x1: 2730, color: '#9aa6c8' },
+    { id: 'growth',   label: 'グロース',    en: 'GROWTH HUB',     x0: 2740, x1: 3400, color: '#F0705F' },
+    { id: 'refresh',  label: 'リフレッシュ', en: 'REFRESH ROOM',  x0: 3420, x1: 4400, color: '#6fd0a8' },
+    { id: 'library',  label: 'ライブラリ',  en: 'LIBRARY',        x0: 4420, x1: 4940, color: '#c08a5a' },
+    { id: 'corp',     label: 'コーポレート', en: 'CORPORATE',     x0: 4960, x1: 5480, color: '#5BC98A' },
+    { id: 'audit',    label: '監査',        en: 'AUDIT',          x0: 5490, x1: 5770, color: '#9D85D2' },
+    { id: 'terrace',  label: 'テラス',      en: 'TERRACE',        x0: 5800, x1: 6400, color: '#ffd88a' }
   ];
   /* 既存ゾーンを社長室ぶん右へシフトし、先頭に社長室を追加 */
   ZONES.forEach(function (z) { z.x0 += OWNER_W; z.x1 += OWNER_W; });
-  ZONES.unshift({ id: 'owner', label: '社長室', x0: 0, x1: OWNER_W, color: '#F4EFDE' });
+  ZONES.unshift({ id: 'owner', label: '社長室', en: "OWNER'S OFFICE", x0: 0, x1: OWNER_W, color: '#F4EFDE' });
 
   /* デスク席(足元座標)— 部門ごと */
   var DEPT_SEATS = {
@@ -821,6 +821,15 @@
     /* 全体の空気(手前をわずかに暗く締める) */
     s.push('<rect x="0" y="1060" width="' + VW + '" height="40" fill="#000" opacity="0.28" filter="url(#oBlurM)"/>');
 
+    /* ゾーンの床際ネームプレート(常時表示) */
+    ZONES.forEach(function (z) {
+      var cx = (z.x0 + z.x1) / 2;
+      s.push('<text class="office-zlabel" x="' + cx + '" y="1087" text-anchor="middle"' +
+        ' font-family="sans-serif" font-size="17" letter-spacing="1.5"' +
+        ' fill="#e9ecf7" stroke="#060a1c" stroke-width="4" paint-order="stroke" opacity="0.82">' +
+        '<tspan fill="' + z.color + '">&#9679;</tspan> ' + esc(z.en) + ' / ' + esc(z.label) + '</text>');
+    });
+
     s.push('</svg>');
     return s.join('');
   }
@@ -841,6 +850,36 @@
   function yen(n) {
     if (typeof n !== 'number') return '—';
     return (n < 0 ? '-¥' : '¥') + Math.abs(n).toLocaleString('ja-JP');
+  }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  /* 現在時刻(JST・HH:MM)。Intl非対応環境はUTC+9で計算 */
+  function jstNow() {
+    try {
+      return new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date());
+    } catch (e) {
+      var d = new Date(Date.now() + 9 * 3600000);
+      return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes());
+    }
+  }
+  /* ISO時刻 → 「◯月◯日 ◯時◯分」(JST) */
+  function jstStamp(iso) {
+    var t = Date.parse(iso);
+    if (isNaN(t)) return null;
+    try {
+      var parts = new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', hour12: false
+      }).formatToParts(new Date(t));
+      var o = {};
+      parts.forEach(function (p) { o[p.type] = p.value; });
+      if (o.month && o.day && o.hour != null && o.minute != null) {
+        return Number(o.month) + '月' + Number(o.day) + '日 ' + Number(o.hour) + '時' + Number(o.minute) + '分';
+      }
+    } catch (e) { /* fallthrough */ }
+    var d = new Date(t + 9 * 3600000);
+    return (d.getUTCMonth() + 1) + '月' + d.getUTCDate() + '日 ' + d.getUTCHours() + '時' + d.getUTCMinutes() + '分';
   }
   function rand(a, b) { return a + Math.random() * (b - a); }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -900,6 +939,60 @@
     '<button type="button" class="office-zoom__btn" data-z="1" aria-label="拡大">+</button>' +
     '<button type="button" class="office-zoom__btn" data-z="-1" aria-label="縮小">−</button>';
   sceneEl.appendChild(zoomWrap);
+
+  /* データ鮮度(dashboard.json の generated_at から。取得失敗時は非表示) */
+  var freshEl = document.createElement('div');
+  freshEl.className = 'office-fresh';
+  freshEl.style.display = 'none';
+  zoomWrap.insertBefore(freshEl, zoomWrap.firstChild);
+  var freshAt = null;
+  function renderFresh() {
+    var r = freshAt ? relTime(freshAt) : null;
+    if (r) {
+      freshEl.textContent = 'データ更新: ' + r;
+      freshEl.style.display = '';
+    } else {
+      freshEl.style.display = 'none';
+    }
+  }
+
+  /* フルスクリーンボタン(非対応環境=iOS Safari等では出さない) */
+  var fsBtn = null;
+  (function initFullscreen() {
+    var reqFn = sceneEl.requestFullscreen || sceneEl.webkitRequestFullscreen;
+    if (!reqFn) return; /* iOS Safari 等の非対応環境ではボタン自体を出さない */
+    if ('fullscreenEnabled' in document && !document.fullscreenEnabled && !document.webkitFullscreenEnabled) return;
+    fsBtn = document.createElement('button');
+    fsBtn.type = 'button';
+    fsBtn.className = 'office-zoom__btn office-fs-btn';
+    fsBtn.setAttribute('aria-label', 'フルスクリーン');
+    fsBtn.textContent = '⛶';
+    zoomWrap.insertBefore(fsBtn, freshEl.nextSibling);
+    function fsElement() {
+      return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+    fsBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      try {
+        if (fsElement()) {
+          var exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+          if (exitFn) exitFn.call(document);
+        } else {
+          var p = reqFn.call(sceneEl);
+          if (p && p.catch) p.catch(function () {});
+        }
+      } catch (e) { /* 失敗しても他機能に影響させない */ }
+    });
+    function onFsChange() {
+      var on = !!fsElement();
+      sceneEl.classList.toggle('is-fullscreen', on);
+      fsBtn.setAttribute('aria-label', on ? 'フルスクリーン解除' : 'フルスクリーン');
+      fsBtn.classList.toggle('is-active', on);
+      layout();
+    }
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+  })();
 
   var dragNote = document.createElement('div');
   dragNote.className = 'office-dragnote';
@@ -1034,7 +1127,7 @@
   /* ドラッグ/スワイプ(Pointer Events) */
   var drag = { id: null, lastX: 0, lastT: 0, startX: 0, startY: 0 };
   sceneEl.addEventListener('pointerdown', function (ev) {
-    if (ev.target.closest('.office-panel, .office-hud, .office-zoom, .office-nav')) return;
+    if (ev.target.closest('.office-panel, .office-hud, .office-zoom, .office-nav, .office-roster, .office-roster-btn')) return;
     drag.id = ev.pointerId;
     drag.lastX = ev.clientX; drag.lastT = performance.now();
     drag.startX = ev.clientX; drag.startY = ev.clientY;
@@ -1080,6 +1173,9 @@
       clampPan(); applyPan();
       dragNote.classList.add('is-hidden');
       ev.preventDefault();
+    } else if (ev.key === 'Escape') {
+      closePanel();
+      closeRoster();
     }
   });
 
@@ -1295,7 +1391,24 @@
   }
   function hideTip() { tipEl.classList.remove('is-on'); }
 
+  /* 直近の仕事履歴(activity[slug].recent = ISO時刻の配列・最大3件) */
+  function historyHtml(em) {
+    var html = '<div class="office-panel__hist"><p class="office-panel__hist-title">直近の仕事履歴</p>';
+    var rec = (em.activity && em.activity.recent && em.activity.recent.length)
+      ? em.activity.recent.slice(-3).reverse() : [];
+    var rows = [];
+    rec.forEach(function (iso) {
+      var st = jstStamp(iso);
+      if (st) rows.push('<li>' + esc(st) + ' セッション実施</li>');
+    });
+    html += rows.length
+      ? '<ul class="office-panel__hist-list">' + rows.join('') + '</ul>'
+      : '<p class="office-panel__hist-empty">初出勤待ち</p>';
+    return html + '</div>';
+  }
+
   function openPanel(em) {
+    closeRoster();
     var e = em.def;
     panelEl.innerHTML =
       '<button type="button" class="office-panel__close" aria-label="閉じる">×</button>' +
@@ -1304,6 +1417,7 @@
       '<p class="office-panel__role">' + esc(e.role) + ' <span class="office-panel__dept" style="border-color:' + DEPT_COLOR[e.dept] + ';color:' + DEPT_COLOR[e.dept] + '">' + esc(e.dept) + '</span></p>' +
       '<p class="office-panel__blurb">' + esc(e.blurb) + '</p>' +
       '<p class="office-panel__act">' + esc(STATE_LABEL[em.state] || '勤務中') + ' — ' + esc(activityLine(em)) + '</p>' +
+      historyHtml(em) +
       '<p><a href="https://github.com/shotaro-nagano/ai-company/blob/main/agents/' + e.slug + '.md" rel="noopener">仕様書を見る(GitHub)→</a></p>';
     var av = panelEl.querySelector('.office-panel__avatar');
     av.onerror = function () {
@@ -1435,6 +1549,7 @@
   }
 
   function openOwnerPanel() {
+    closeRoster();
     panelEl.innerHTML =
       '<button type="button" class="office-panel__close" aria-label="閉じる">×</button>' +
       '<img class="office-panel__avatar" src="assets/characters/owner.svg" alt="オーナーのアバター">' +
@@ -1457,17 +1572,108 @@
     openOwnerPanel();
   });
 
+  /* ---------- 社員一覧ドロワー(👥 社員名簿) ---------- */
+  var rosterBtn = document.createElement('button');
+  rosterBtn.type = 'button';
+  rosterBtn.className = 'office-roster-btn';
+  rosterBtn.setAttribute('aria-expanded', 'false');
+  rosterBtn.innerHTML = '👥 <span>社員名簿</span>';
+  sceneEl.appendChild(rosterBtn);
+
+  var rosterEl = document.createElement('aside');
+  rosterEl.className = 'office-roster';
+  rosterEl.setAttribute('aria-label', '社員名簿');
+  sceneEl.appendChild(rosterEl);
+
+  function stateIcon(em) {
+    var label = STATE_LABEL[em.state] || '🖥 作業中';
+    return label.split(' ')[0];
+  }
+  function renderRoster() {
+    var html =
+      '<div class="office-roster__head"><strong>👥 社員名簿</strong>' +
+      '<span>' + (emps.length + 1) + '名</span>' +
+      '<button type="button" class="office-roster__close" aria-label="閉じる">×</button></div>';
+    /* オーナー(人間) */
+    html += '<button type="button" class="office-roster__row" data-who="owner">' +
+      '<img src="assets/characters/owner.svg" alt="" draggable="false">' +
+      '<span class="office-roster__info"><span class="office-roster__name">オーナー</span>' +
+      '<span class="office-roster__role" style="color:#F4EFDE">人間・最終承認者</span></span>' +
+      '<span class="office-roster__state">' + esc(OWNER_BUBBLE[owner.state] || '👀') + '</span></button>';
+    /* AI社員22名 */
+    emps.forEach(function (em, i) {
+      var e = em.def;
+      html += '<button type="button" class="office-roster__row" data-who="' + i + '">' +
+        '<img data-slug="' + esc(e.slug) + '" alt="" draggable="false">' +
+        '<span class="office-roster__info"><span class="office-roster__name">' + esc(e.name) +
+        (em.active ? ' <i class="office-roster__on" title="直近24時間に稼働"></i>' : '') + '</span>' +
+        '<span class="office-roster__role" style="color:' + DEPT_COLOR[e.dept] + '">' + esc(e.role) + '</span></span>' +
+        '<span class="office-roster__state" title="' + esc(STATE_LABEL[em.state] || '勤務中') + '">' + esc(stateIcon(em)) + '</span></button>';
+    });
+    rosterEl.innerHTML = html;
+    /* 顔画像(characters優先・ドット絵フォールバック) */
+    Array.prototype.forEach.call(rosterEl.querySelectorAll('img[data-slug]'), function (img) {
+      var slug = img.getAttribute('data-slug');
+      for (var i = 0; i < EMPLOYEES.length; i++) {
+        if (EMPLOYEES[i].slug === slug) { setCharSrc(img, EMPLOYEES[i]); break; }
+      }
+    });
+  }
+  function openRoster() {
+    closePanel();
+    renderRoster();
+    rosterEl.classList.add('is-open');
+    rosterBtn.setAttribute('aria-expanded', 'true');
+  }
+  function closeRoster() {
+    rosterEl.classList.remove('is-open');
+    rosterBtn.setAttribute('aria-expanded', 'false');
+  }
+  rosterBtn.addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    if (rosterEl.classList.contains('is-open')) closeRoster(); else openRoster();
+  });
+  rosterEl.addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    if (ev.target.closest('.office-roster__close')) { closeRoster(); return; }
+    var row = ev.target.closest('.office-roster__row');
+    if (!row) return;
+    var who = row.getAttribute('data-who');
+    closeRoster();
+    if (who === 'owner') {
+      smoothPanTo(owner.x);
+      openOwnerPanel();
+    } else {
+      var em = emps[Number(who)];
+      if (em) {
+        smoothPanTo(em.x);
+        openPanel(em);
+      }
+    }
+  });
+  /* シーンの余白クリックで閉じる(社員クリック等は stopPropagation 済み) */
+  sceneEl.addEventListener('click', function (ev) {
+    if (!rosterEl.contains(ev.target) && !rosterBtn.contains(ev.target)) closeRoster();
+  });
+
   /* ---------- HUD ---------- */
+  function updateClock() {
+    var el = hudEl.querySelector('.office-hud__time');
+    if (el) el.textContent = jstNow();
+  }
   function renderHUD(d) {
     var hp = Math.max(0, Math.min(100, d.hp_percent || 0));
     var exp = Math.max(0, Math.min(100, d.exp_percent || 0));
     hudEl.innerHTML =
       '<div class="office-hud__lv dot">Lv.' + (d.level || 1) + ' PixelYen</div>' +
+      '<div class="office-hud__clock">🕐 <span class="office-hud__time dot">--:--</span> <small>JST</small></div>' +
+      '<div class="office-hud__status">🟢 自律運転中 <span class="dot">24/7</span></div>' +
       '<div class="office-hud__bar"><span class="dot">HP</span><span class="office-hud__track"><span class="office-hud__fill office-hud__fill--hp" style="width:' + hp + '%"></span></span></div>' +
       '<div class="office-hud__bar"><span class="dot">EXP</span><span class="office-hud__track"><span class="office-hud__fill office-hud__fill--exp" style="width:' + exp + '%"></span></span></div>' +
       '<div class="office-hud__money">今月売上 <span class="office-hud__num">' + yen(d.revenue_this_month) + '</span></div>' +
       '<div class="office-hud__money">純利益 <span class="office-hud__num">' + yen(d.profit_this_month) + '</span></div>' +
       '<a class="office-hud__link dot" href="dashboard.html">詳細ステータス→</a>';
+    updateClock();
   }
 
   /* ---------- オフィスタブ ---------- */
@@ -1496,6 +1702,13 @@
     next_unlock: { level: 2, condition: '月商1万円', teaser: '新オフィス' }
   };
 
+  /* 時計は取得結果を待たずに動かす(データ欠落時も常時動作) */
+  renderHUD(DEFAULT_DASH);
+  setInterval(function () {
+    updateClock();
+    renderFresh();
+  }, 60000);
+
   Promise.all([
     fetchJSON('data/dashboard.json').catch(function () { return DEFAULT_DASH; }),
     fetchJSON('offices.json').catch(function () { return DEFAULT_OFFICES; })
@@ -1503,6 +1716,8 @@
     var dash = res[0] || DEFAULT_DASH;
     renderHUD(dash);
     renderTabs(res[1] || DEFAULT_OFFICES);
+    freshAt = dash.generated_at || null;
+    renderFresh();
     var act = dash.activity || {};
     emps.forEach(function (em) {
       em.activity = act[em.def.slug] || null;
@@ -1513,6 +1728,8 @@
   }).catch(function () {
     renderHUD(DEFAULT_DASH);
     renderTabs(DEFAULT_OFFICES);
+    freshAt = null;
+    renderFresh();
     emps.forEach(function (em) { nextState(em); });
     startLoop();
   });

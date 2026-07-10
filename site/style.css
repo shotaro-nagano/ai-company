@@ -518,6 +518,9 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 .office-panel,
 .office-hud,
 .office-zoom__btn,
+.office-roster,
+.office-roster-btn,
+.office-fresh,
 .office-hint {
   background: rgba(16, 20, 42, 0.72);
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
@@ -635,7 +638,30 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
 }
 .office-hud__link { color: #cdd6f4; font-size: 12px; }
 
-/* ズームボタン */
+/* HUD: JST時計+営業ステータス */
+.office-hud__clock {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 2px 0 1px;
+}
+.office-hud__time {
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(140, 207, 255, 0.4);
+}
+.office-hud__clock small { font-size: 10px; opacity: 0.6; }
+.office-hud__status {
+  font-size: 11px;
+  opacity: 0.95;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+/* ズームボタン(+フルスクリーン+データ鮮度) */
 .office-zoom {
   position: absolute;
   right: 12px;
@@ -643,6 +669,7 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   z-index: 150;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 6px;
 }
 .office-zoom__btn {
@@ -655,6 +682,159 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   color: #e9ecf7;
 }
 .office-zoom__btn:hover { background: rgba(40, 48, 84, 0.85); }
+.office-fs-btn { font-size: 17px; }
+.office-fs-btn.is-active { background: rgba(65, 166, 246, 0.35); }
+
+/* データ鮮度(シーン右下・ズーム列の上) */
+.office-fresh {
+  font-size: 10.5px;
+  line-height: 1.4;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: rgba(233, 236, 247, 0.85);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* 社員名簿ボタン(HUD付近・右上) */
+.office-roster-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 170;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.office-roster-btn:hover { background: rgba(40, 48, 84, 0.85); }
+
+/* 社員一覧ドロワー(左からスライドイン) */
+.office-roster {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  bottom: 10px;
+  z-index: 320;
+  width: min(264px, 84%);
+  padding: 10px;
+  border-radius: 14px;
+  transform: translateX(calc(-100% - 24px));
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow-y: auto;
+}
+.office-roster.is-open { transform: translateX(0); }
+.office-roster__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  margin-bottom: 4px;
+}
+.office-roster__head strong { font-size: 13.5px; color: #fff; }
+.office-roster__head > span { flex: 1; font-size: 11px; opacity: 0.7; }
+.office-roster__close {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9ecf7;
+  font-size: 14px;
+  line-height: 1;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.office-roster__close:hover { background: rgba(255, 255, 255, 0.18); }
+.office-roster__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px;
+  margin: 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: none;
+  color: #e9ecf7;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.office-roster__row:hover { background: rgba(255, 255, 255, 0.07); }
+.office-roster__row img {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 39px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.office-roster__row img.is-fallback {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.office-roster__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.office-roster__name { font-size: 13px; color: #fff; line-height: 1.3; }
+.office-roster__role {
+  font-size: 10.5px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.office-roster__on {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38B764;
+  box-shadow: 0 0 6px rgba(56, 183, 100, 0.8);
+  vertical-align: 1px;
+}
+.office-roster__state { flex: 0 0 auto; font-size: 14px; }
+
+/* 詳細パネル: 直近の仕事履歴 */
+.office-panel__hist {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.office-panel__hist-title { font-size: 11px; opacity: 0.7; margin-bottom: 4px; }
+.office-panel__hist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 11.5px;
+  line-height: 1.9;
+}
+.office-panel__hist-list li::before { content: '▸ '; color: #9ec5ff; }
+.office-panel__hist-empty { font-size: 11.5px; opacity: 0.6; }
+
+/* フルスクリーン時はシーンを画面いっぱいに */
+.office-scene:fullscreen {
+  height: 100%;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+.office-scene:-webkit-full-screen {
+  height: 100%;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
 
 /* 端のパンヒント矢印 */
 .office-hint {
@@ -793,6 +973,12 @@ th { background: var(--pale-product); font-family: var(--font-dot); font-weight:
   .office-nav { width: calc(100% - 16px); gap: 4px; }
   .office-map { height: 18px; }
   .office-jump__chip { font-size: 10px; padding: 3px 8px; }
+  .office-hud__time { font-size: 14px; }
+  .office-hud__status { font-size: 10px; }
+  .office-roster-btn { top: 8px; right: 8px; padding: 6px 10px; font-size: 11px; }
+  .office-roster { width: min(236px, 86%); }
+  .office-fresh { font-size: 9.5px; padding: 2px 8px; }
+  .office-fs-btn { font-size: 15px; }
 }
 
 /* ---------- レスポンシブ ---------- */

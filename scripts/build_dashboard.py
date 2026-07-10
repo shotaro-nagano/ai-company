@@ -10,6 +10,7 @@
 import datetime
 import json
 import re
+import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -72,6 +73,27 @@ def main() -> None:
             a["active_24h"] = True
 
     employees = json.loads((REPO / "scripts" / "employees.json").read_text())
+
+    # 社員ごとの「本物の仕事」= コミットメッセージ(「レイ: 〜」形式)を直近3件ずつ
+    try:
+        log = subprocess.check_output(
+            ["git", "-C", str(REPO), "log", "--pretty=%ad|%s", "--date=format:%m/%d %H:%M", "-200"],
+            text=True,
+        ).splitlines()
+        for slug, info in employees.items():
+            prefix = info["name"] + ":"
+            works = []
+            for line in log:
+                date, _, subject = line.partition("|")
+                if subject.startswith(prefix):
+                    msg = subject[len(prefix):].strip().splitlines()[0][:60]
+                    works.append({"at": date, "msg": msg})
+                if len(works) >= 3:
+                    break
+            if works:
+                activity.setdefault(slug, {"last_at": None, "sessions_7d": 0, "active_24h": False, "recent": []})["works"] = works
+    except Exception:
+        pass  # git履歴が読めない環境でも壊さない
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(

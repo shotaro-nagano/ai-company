@@ -81,26 +81,49 @@ def main() -> None:
             if LAST_READ_FILE.exists():
                 last = json.loads(LAST_READ_FILE.read_text())
 
-            # 読む場所 = チャンネル直下 + 社長室配下のアクティブスレッド(人間はスレッドにも書く)
-            sources = [("boss", boss_id, "")]
+            # 読む場所 = チャンネル直下 + 社長室配下のスレッド(人間はスレッドにも書く)。
+            # スレッド発見は3経路の和集合(どれかが環境差で空でも他で拾う):
+            #  A) ギルドのアクティブ一覧(全ギルド走査) B) アーカイブ済み公開一覧 C) 直近メッセージに付随する thread オブジェクト
+            threads = {}
             try:
-                guilds = api_get(token, "/users/@me/guilds")
-                if guilds:
-                    active = api_get(token, f"/guilds/{guilds[0]['id']}/threads/active")
-                    ths = active.get("threads", [])
-                    print(f"(診断: アクティブスレッド{len(ths)}件: " + ", ".join(f"「{t.get('name','?')}」parent={t.get('parent_id')}" for t in ths[:10]) + ")")
-                    for th in ths:
-                        if th.get("parent_id") == boss_id:
-                            sources.append((f"boss_th_{th['id']}", th["id"], th.get("name", "スレッド")))
-            except Exception as e:
-                print(f"(診断: スレッド列挙に失敗: {type(e).__name__}: {e} — 直下のみ読む)")
+                for g in api_get(token, "/users/@me/guilds"):
+                    try:
+                        for th in api_get(token, f"/guilds/{g['id']}/threads/active").get("threads", []):
+                            if th.get("parent_id") == boss_id:
+                                threads[th["id"]] = th.get("name", "スレッド")
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+            try:
+                arch = api_get(token, f"/channels/{boss_id}/threads/archived/public?limit=25")
+                for th in arch.get("threads", []):
+                    threads[th["id"]] = th.get("name", "スレッド")
+            except Exception:
+                pass
+            try:
+                for m in api_get(token, f"/channels/{boss_id}/messages?limit=50"):
+                    th = m.get("thread")
+                    if th:
+                        threads[th["id"]] = th.get("name", "スレッド")
+            except Exception:
+                pass
+            print(f"(診断: 社長室配下スレッド{len(threads)}件検出)")
+
+            sources = [("boss", boss_id, "")]
+            for tid, tname in threads.items():
+                sources.append((f"boss_th_{tid}", tid, tname))
 
             humans = []
             newest_by_key = {}
             for key, cid, label in sources:
-                after = last.get(key, "")
-                path = f"/channels/{cid}/messages?limit=50" + (f"&after={after}" if after else "")
-                msgs = api_get(token, path)
+                try:
+                    after = last.get(key, "")
+                    path = f"/channels/{cid}/messages?limit=50" + (f"&after={after}" if after else "")
+                    msgs = api_get(token, path)
+                except Exception as se:
+                    print(f"(診断: スレッド「{label or cid}」を読めない: {se} — 非公開スレッドの可能性。チャンネル直下に書いてもらう必要あり)")
+                    continue
                 if msgs:
                     newest_by_key[key] = str(max(int(m["id"]) for m in msgs))
                 for m in reversed(msgs):

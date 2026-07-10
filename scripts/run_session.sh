@@ -67,7 +67,10 @@ ${GOAL_TEXT}
 6. handoff.md の自分宛てタスクと、本日のタスクを実行する
 7. 終了前に必ず: state/ を更新し、handoff.md に次回への申し送りを書き、
    変更を git add して自分の名前で git commit する(pushはランナーが行う)
-8. 最後に scripts/discord_post.sh ${SLUG} <channel> "<報告>" で所定チャンネルへ報告する
+8. 最後に scripts/discord_post.sh ${SLUG} <channel> "<報告>" で所定チャンネルへ報告する。
+   報告とは別に、気が向いたら scripts/discord_bot_post.py general ${SLUG} "<一言>" で
+   #general に雑談を一言残してよい(任意・1回まで。今日の仕事の感想や社内の小ネタなど、
+   あなたの性格が出る人間味のあるもの。数字の報告はここではしない)
    (通常業務は log。ロールプロンプトの出力形式に従う)
 
 制約(違反禁止):

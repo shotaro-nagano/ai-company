@@ -1,0 +1,18 @@
+# 一時診断用(スレッド不達問題の調査)。解決後に削除する
+name: 診断スキャン
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: python3 scripts/discord_debug_scan.py

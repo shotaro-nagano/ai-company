@@ -1,10 +1,12 @@
-# CSポーリング — サポートGmailの未読を6時間ごとに確認し、未読があればマメを起動する
-# Gmail認証が未設定の間は何もしない(保留機能・建国を止めない)
+# CSポーリング — サポートGmailと#社長室の未読を確認し、未読があれば担当を起動する
+# Gmail認証が未設定の間はGmail側は何もしない(保留機能・建国を止めない)
+# 社長室チェックは boss-poll.yml と二重化(GitHubスケジューラの遅延・取りこぼし対策)
 name: CSポーリング
 
 on:
   schedule:
     - cron: '30 22,4,10,16 * * *'   # 6時間ごと(JST 7:30/13:30/19:30/1:30)
+    - cron: '52 0,2,6,8,12,14,18,20 * * *'  # 社長室の追い巡回(実績あるこのワークフローに相乗り)
   workflow_dispatch:
 
 concurrency:
@@ -44,3 +46,24 @@ jobs:
             -f event_type=session \
             -f "client_payload[slug]=mame" \
             -f "client_payload[task]=サポート受信箱に未読がある。scripts/gmail_poll.py で内容を確認し、憲法第4条(14日全額返金のみ・値引き不可・対外的な約束禁止)に従って返信する(scripts/gmail_send.py)。対応記録は匿名化・要約のみ state/ に残す"
+
+      - name: 社長室の未読確認(二重化)
+        id: boss
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          OUT=$(python3 scripts/discord_poll.py)
+          echo "$OUT"
+          if echo "$OUT" | grep -q "人間の指示は憲法の範囲内で最優先"; then
+            echo "unread=true" >> $GITHUB_OUTPUT
+          else
+            echo "unread=false" >> $GITHUB_OUTPUT
+          fi
+      - name: レイを起動(社長室対応)
+        if: steps.boss.outputs.unread == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run daily.yml --ref main \
+            -f slug=rei \
+            -f task="#社長室 に人間(オーナー)からの新しいメッセージがある(ポーリング結果参照)。最優先で対応せよ: (1)内容を読み、質問なら答えを、指示なら優先度判断とタスク化(handoff.md)を行う (2)必ず scripts/discord_boss_reply.py で返信する(スレッドからの場合はポーリング結果のthread_id宛てに --thread で。受領の一言+回答または対応方針を平易な日本語で) (3)状況確認なら state/ から正直に要約。憲法の範囲内で人間の指示は最優先"

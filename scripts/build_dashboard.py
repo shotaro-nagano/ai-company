@@ -60,9 +60,10 @@ def main() -> None:
         except (KeyError, ValueError):
             continue
         slug = s.get("slug", "")
-        a = activity.setdefault(slug, {"last_at": None, "sessions_7d": 0, "active_24h": False})
+        a = activity.setdefault(slug, {"last_at": None, "sessions_7d": 0, "active_24h": False, "recent": []})
         if a["last_at"] is None or s["at"] > a["last_at"]:
             a["last_at"] = s["at"]
+        a["recent"] = (a["recent"] + [s["at"]])[-3:]
         if at >= week_ago:
             a["sessions_7d"] += 1
             if slug not in party:

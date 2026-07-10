@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T01:47:09+00:00",
+  "generated_at": "2026-07-10T04:03:51+00:00",
   "month": "2026-07",
   "revenue_this_month": 0,
   "cost_this_month": 15000,
@@ -13,31 +13,95 @@
     "kaketsu",
     "matome",
     "hirameki",
-    "rei"
+    "rei",
+    "okite",
+    "tsukuru",
+    "shiori",
+    "hikari",
+    "hirome"
   ],
   "activity": {
     "kaketsu": {
-      "last_at": "2026-07-08T15:08:02+00:00",
-      "sessions_7d": 3,
-      "active_24h": true
+      "last_at": "2026-07-09T13:03:51+00:00",
+      "sessions_7d": 4,
+      "active_24h": true,
+      "recent": [
+        "2026-07-08T15:04:20+00:00",
+        "2026-07-08T15:08:02+00:00",
+        "2026-07-09T13:03:51+00:00"
+      ]
     },
     "matome": {
-      "last_at": "2026-07-09T04:30:00+00:00",
-      "sessions_7d": 11,
-      "active_24h": true
+      "last_at": "2026-07-09T23:02:57+00:00",
+      "sessions_7d": 12,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T01:08:40+00:00",
+        "2026-07-09T01:13:17+00:00",
+        "2026-07-09T23:02:57+00:00"
+      ]
     },
     "hirameki": {
       "last_at": "2026-07-09T00:16:43+00:00",
       "sessions_7d": 1,
-      "active_24h": true
+      "active_24h": false,
+      "recent": [
+        "2026-07-09T00:16:43+00:00"
+      ]
     },
     "rei": {
-      "last_at": "2026-07-09T00:22:51+00:00",
+      "last_at": "2026-07-10T01:53:45+00:00",
+      "sessions_7d": 3,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T00:22:51+00:00",
+        "2026-07-09T01:53:34+00:00",
+        "2026-07-10T01:53:45+00:00"
+      ]
+    },
+    "okite": {
+      "last_at": "2026-07-09T01:59:41+00:00",
       "sessions_7d": 1,
-      "active_24h": true
+      "active_24h": false,
+      "recent": [
+        "2026-07-09T01:59:41+00:00"
+      ]
+    },
+    "tsukuru": {
+      "last_at": "2026-07-09T05:42:06+00:00",
+      "sessions_7d": 2,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T05:40:34+00:00",
+        "2026-07-09T05:42:06+00:00"
+      ]
+    },
+    "shiori": {
+      "last_at": "2026-07-09T06:41:48+00:00",
+      "sessions_7d": 1,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T06:41:48+00:00"
+      ]
+    },
+    "hikari": {
+      "last_at": "2026-07-09T07:39:35+00:00",
+      "sessions_7d": 1,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T07:39:35+00:00"
+      ]
+    },
+    "hirome": {
+      "last_at": "2026-07-09T09:32:14+00:00",
+      "sessions_7d": 1,
+      "active_24h": true,
+      "recent": [
+        "2026-07-09T09:32:14+00:00"
+      ]
     }
   },
-  "usage_percent": 4.2,
+  "usage_percent": 9.8,
   "employees": {
     "rei": {
       "name": "レイ",

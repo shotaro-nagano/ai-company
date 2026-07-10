@@ -103,7 +103,7 @@ def main() -> None:
                     newest_by_key[key] = str(max(int(m["id"]) for m in msgs))
                 for m in reversed(msgs):
                     if not m.get("author", {}).get("bot"):
-                        place = f"(スレッド「{label}」)" if label else ""
+                        place = f"(スレッド「{label}」 thread_id:{cid} — 返信は discord_boss_reply.py --thread {cid} を使う)" if label else ""
                         humans.append(f"- {m['author'].get('username','人間')}{place}: {m.get('content','')}")
 
             print("\n## #社長室(人間からの指示・未読分)")

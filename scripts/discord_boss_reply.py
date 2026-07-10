@@ -4,7 +4,8 @@
 Webhookが未整備でも、Botの「ウェブフックの管理」権限で #社長室 にWebhookを
 自動作成(既存の「PixelYen」を再利用)して投稿する。新しいSecretは不要。
 
-使い方: discord_boss_reply.py [--slug rei] "<返信本文>"
+使い方: discord_boss_reply.py [--slug rei] [--thread <スレッドID>] "<返信本文>"
+  --thread を付けると、そのスレッドの中に返信する(ポーリング結果の id を使う)
 必要: DISCORD_BOT_TOKEN / state/discord_channels.json の boss ID
 """
 import json
@@ -38,9 +39,16 @@ def api(token: str, method: str, path: str, body=None):
 def main() -> None:
     args = sys.argv[1:]
     slug = "rei"
-    if args and args[0] == "--slug":
-        slug = args[1]
-        args = args[2:]
+    thread_id = ""
+    while args and args[0].startswith("--"):
+        if args[0] == "--slug":
+            slug = args[1]
+            args = args[2:]
+        elif args[0] == "--thread":
+            thread_id = args[1]
+            args = args[2:]
+        else:
+            break
     message = args[0] if args else ""
     if not message:
         sys.exit("usage: discord_boss_reply.py [--slug rei] '<message>'")
@@ -71,7 +79,8 @@ def main() -> None:
         payload = {"username": username, "content": message[i : i + 1900]}
         if avatar:
             payload["avatar_url"] = avatar
-        api(token, "POST", f"/webhooks/{hook['id']}/{hook['token']}", payload)
+        suffix = f"?thread_id={thread_id}" if thread_id else ""
+        api(token, "POST", f"/webhooks/{hook['id']}/{hook['token']}{suffix}", payload)
     print("[boss_reply] sent")
 
 

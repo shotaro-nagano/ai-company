@@ -1,0 +1,45 @@
+# 社長室チェック連鎖 — どのワークフローかが完了するたびに #社長室 の未読を確認する。
+# cron不要のイベント駆動(workflow_run はカケツ自動出動で発火実績あり)。
+# レイが返信する→常勤セッション完了→再チェック、と会話のラリーが自然につながる。
+# 未読なしなら即終了するので連鎖は必ず止まる。
+name: 社長室チェック連鎖
+
+on:
+  workflow_run:
+    workflows: ["常勤セッション", "週次セッション", "月次セッション", "イベントセッション", "CSポーリング", "サイト公開", "アバター書き出し"]
+    types: [completed]
+
+concurrency:
+  group: pixelyen-boss-chain
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: 未読確認
+        id: check
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          OUT=$(python3 scripts/discord_poll.py)
+          echo "$OUT"
+          if echo "$OUT" | grep -q "人間の指示は憲法の範囲内で最優先"; then
+            echo "unread=true" >> $GITHUB_OUTPUT
+          else
+            echo "unread=false" >> $GITHUB_OUTPUT
+          fi
+      - name: レイを起動(指示対応)
+        if: steps.check.outputs.unread == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run daily.yml --ref main \
+            -f slug=rei \
+            -f task="#社長室 に人間(オーナー)からの新しいメッセージがある(ポーリング結果参照)。最優先で対応せよ: (1)内容を読み、質問なら答えを、指示なら優先度判断とタスク化(handoff.md)を行う (2)必ず scripts/discord_boss_reply.py で返信する(スレッド発ならポーリング結果のthread_id宛てに --thread を付ける。受領の一言+回答または対応方針を、平易な日本語で簡潔に) (3)状況確認なら state/ から正直に要約。過去に返信済みの内容を蒸し返さない。憲法の範囲内で人間の指示は最優先"

@@ -87,11 +87,13 @@ def main() -> None:
                 guilds = api_get(token, "/users/@me/guilds")
                 if guilds:
                     active = api_get(token, f"/guilds/{guilds[0]['id']}/threads/active")
-                    for th in active.get("threads", []):
+                    ths = active.get("threads", [])
+                    print(f"(診断: アクティブスレッド{len(ths)}件: " + ", ".join(f"「{t.get('name','?')}」parent={t.get('parent_id')}" for t in ths[:10]) + ")")
+                    for th in ths:
                         if th.get("parent_id") == boss_id:
                             sources.append((f"boss_th_{th['id']}", th["id"], th.get("name", "スレッド")))
-            except Exception:
-                pass  # スレッド列挙に失敗しても直下は読む
+            except Exception as e:
+                print(f"(診断: スレッド列挙に失敗: {type(e).__name__}: {e} — 直下のみ読む)")
 
             humans = []
             newest_by_key = {}

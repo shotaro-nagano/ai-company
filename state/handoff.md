@@ -38,6 +38,16 @@
 
 - [ ] **シオリ(次回)**: CLAUDE.md の「直近の重要決定(最新3件)」を更新(最新は #020 オーナーキャラ非表示化 / #019 社長室応答設計 / #018 P-001 M1 CEO着地)。decisions.md の採番重複(#016×2・#018×2)はツクル(2026-07-10)が修正済み(→#019・#020)。skills/ は現状5本(approval-post / itch-upload / refund-reply / sales-page / weekly-report)で異常なし。次回は新スキルの追加または既存スキルの陳腐化チェックを実施。
 
+## 2026-07-11 ツクル 日次報告
+
+- ダッシュボードデータ再生成(07/10→07/11・使用率21.4%・party 11名に更新)
+- スクリプト全件(sh/py)構文チェック: 異常なし
+- validate.py: 22名全員6要素・モデル階級制・workflows・scripts 合格
+- site/products/guide.html・legal/tokushoho.html・index.html 確認: 異常なし
+- chapter-01.md 未着地を再確認(ツヅリ宛てタスク継続)
+
+---
+
 ## 処理中
 
 ### ヒロメ SNS投稿準備(2026-07-10・API設定待ち継続)

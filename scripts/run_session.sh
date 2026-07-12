@@ -9,6 +9,12 @@ SLUG="${1:?usage: run_session.sh <slug> <class> [task]}"
 CLASS="${2:?class required}"
 EXTRA_TASK="${3:-}"
 
+# acceptance-criteriaをEXTRA_TASKから抽出([acceptance-criteria: <path>] マーカー)
+ACCEPTANCE_CRITERIA_FILE=""
+if [ -n "$EXTRA_TASK" ]; then
+  ACCEPTANCE_CRITERIA_FILE=$(printf '%s\n' "$EXTRA_TASK" | grep -oE '\[acceptance-criteria: [^]]+\]' | sed 's/\[acceptance-criteria: //;s/\]//' | head -1 || true)
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
@@ -113,6 +119,17 @@ set -e
 
 # --- 使用量記録(失敗しても枠は消費している) ---
 python3 "$SCRIPT_DIR/record_usage.py" "$SLUG" "$MODEL"
+
+# --- 成果物存在チェック(acceptance-criteria指定時のみ) ---
+if [ -n "$ACCEPTANCE_CRITERIA_FILE" ]; then
+  if [ -f "$ACCEPTANCE_CRITERIA_FILE" ]; then
+    echo "[run_session] ✅ 必須成果物を確認: $ACCEPTANCE_CRITERIA_FILE"
+  else
+    echo "[run_session] ⚠️ 必須成果物が見つかりません: $ACCEPTANCE_CRITERIA_FILE"
+    "$SCRIPT_DIR/discord_post.sh" "$SLUG" error \
+      "⚠️ ${SLUG} event-session 必須成果物なし: \`${ACCEPTANCE_CRITERIA_FILE}\` — Writeツール未実行の可能性。着地失敗。レイに通知します。" || true
+  fi
+fi
 
 # --- commit / push(セッションがcommitし忘れた分も拾う) ---
 git add -A

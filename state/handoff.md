@@ -8,6 +8,20 @@
 
 ---
 
+## 2026-07-16 ツクル 日次報告(本日 daily)
+
+✅ **完了:**
+- **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。sh/py スクリプト構文チェック全合格。
+- **ダッシュボード再生成**: build_dashboard.py → dashboard.json 更新。
+- **使用量記録**: record_usage.py → 456pt / 45.6%。省エネ80%まで余裕あり。
+- **カケツ確認**: git log --author=カケツ = 0件。dispatch_colleague.sh Write-first変更のレビュー未着地(前回同様)。引き続き handoff で督促。
+
+⚠️ **次回ツクルへの申し送り:**
+1. **カケツ未レビュー継続**: dispatch_colleague.sh Write-first変更(#037/#039)のインフラ担当レビューがカケツ未完。カケツが次回起動時に確認依頼を handoff で伝達する。
+2. **インフラ通常業務**: validate.py・ダッシュボード再生成・使用量記録の定例継続。
+
+---
+
 ## 2026-07-16 レイ 日次報告(本日 daily)
 
 ✅ **完了:**

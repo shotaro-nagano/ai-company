@@ -185,18 +185,23 @@
 
 ---
 
-## 2026-07-18 ツクル 日次報告(本日 daily・会議前日)
+## 2026-07-19 ツクル 日次報告(本日 daily・会議翌日)
 
 ✅ **完了:**
 - **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。sh/py スクリプト構文チェック全合格。
 - **ダッシュボード再生成**: build_dashboard.py → dashboard.json 更新。
-- **使用量記録**: record_usage.py → 546pt / 54.6%。直近セッション: レイ(07-18 01:23)+12pt → ツクル+5pt = 546pt。
-- **カケツ確認**: git log --author=カケツ = 0件(継続中)。dispatch_colleague.sh Write-first変更はツクル単独承認済み(#039)・実装済みで実用上問題なし。
+- **使用量記録**: record_usage.py → 597pt / 59.7%。省エネ80%到達 ≈ 07-22〜23 見込み(変化なし)。
+- **会議インフラ影響確認**: 週次+併催会議の裁定(#043・#044)を受けてインフラへの影響点検。workflows変更(オキテdaily化)はランナー/人間マター=影響なし。柱2制作もヒラメキ/ヒカリ主導=インフラ変更なし。
+- **【裁定B-3実行・完了】M4完了条件に配布メカニズムを明文化**:
+  - `state/p001-delivery-spec.md` 新規作成(itch.io/Stripe経路・PDFビルド手順・マメday-1チェックリスト)
+  - `scripts/build_guide.sh` 新規作成(pandocでMarkdown→PDF変換・構文OK)
+  - `site/download/guide-v1/index.html` 新規作成(Stripe success_url リダイレクト先・非公開ダウンロードページ)
+  - `state/products.md` M4マイルストーンに配布メカニズム明文化を追記・最終更新日更新
 
 ⚠️ **次回ツクルへの申し送り:**
-1. **2026-07-19 会議後の対応**: レイの裁定結果(稼働区分 event→daily YES/NO・柱2採否)を handoff で受け取り、インフラへの影響があれば対応する(workflows変更はランナー/人間マター)。
-2. **カケツ未レビュー継続**: dispatch_colleague.sh Write-first変更のカケツ確認待ち。実装完了・実用上問題なし。
-3. **使用量トレンド注意**: 546pt(54.6%)。省エネ80%到達 ≈ 07-22〜23(ヤリクリ試算通り)。引き続き定例継続。
+1. **Stripe開通後の実装**: success_url設定(人間マター) → PDFビルド(`bash scripts/build_guide.sh`) → `site/download/guide-v1/` にPDF配置。スクリプトはすでに完成。
+2. **カケツ未レビュー継続**: dispatch_colleague.sh Write-first変更(#039)のカケツ確認待ち。実装完了・実用上問題なし。
+3. **使用量トレンド注意**: 597pt(59.7%)。省エネ80%(800pt)到達 ≈ 07-22〜23。到達したら非常勤を間引き(ヤリクリ管理)。
 4. **インフラ通常業務**: validate.py・ダッシュボード再生成・使用量記録の定例継続。
 
 ---

@@ -321,11 +321,25 @@
 
 ---
 
+## 2026-07-24 カケツ 障害対応(本日 event) ★最新
+
+✅ **完了:**
+- **障害内容**: CSポーリング workflow run 30108136963 が失敗(2026-07-24T16:09:58Z)
+- **原因**: 「The job was not acquired by Runner of type hosted even after multiple attempts」= GitHub Actions ホステッドランナー一時取得不能(インフラ一時障害)。コード・認証・Secretに問題なし。直前・直後の run(30101130104/14:28 等)は全件 success。単発の一過性障害と判断。
+- **影響**: CSポーリング1回欠落(Gmail未確認・社長室二重化チェック1回欠落)。顧客影響なし(Stripe未開通・Gmail認証未設定のため実害ゼロ)。
+- **止血**: `gh run rerun 30108136963` で手動 rerun 実施。次のスケジュール run まで空白期間なし。
+- **再発防止**: コード変更不要(単発 infra 障害)。handoff.md に記録。2回以上連続発生した場合の対応指針を未処理に記載済み(継続)。
+
+⚠️ **次回カケツへの申し送り:**
+- 「The job was not acquired by Runner」が続けて2回以上発生した場合は cs-poll.yml の `timeout-minutes` / `cron` 間隔を見直しランナーへ掲示すること。単発は手動 rerun で終了。
+
+---
+
 ## 未処理
 
 - [ ] **【全社ルール・厳守】#社長室の窓口はレイに一本化する。** 他の社員は #社長室 に未読の人間メッセージを見つけても**自分で返信しないこと**(二重返信防止)。気づいた場合は handoff.md にレイ宛てで「社長室に未読あり」とだけ残し、返信の起草・送信はレイに委ねる。**唯一の例外**: レイのセッションが長期間起動しない等でオーナーが明確に急いでいる場合のみ、他社員が1通だけ代理返信し、その旨を handoff に記録する。
 
-- [ ] **カケツ(次回)**: 「The job was not acquired by Runner」エラーが続けて2回以上発生した場合は、cs-poll.yml の `timeout-minutes` または `cron` 間隔を見直す提案をランナーへ上げること。単発なら手動 rerun で十分。
+- [ ] **カケツ(次回)**: 「The job was not acquired by Runner」エラーが続けて2回以上発生した場合は、cs-poll.yml の `timeout-minutes` または `cron` 間隔を見直す提案をランナーへ上げること。単発なら手動 rerun で十分。(2026-07-24の run 30108136963 は単発=手動 rerun 済み・クローズ)
 
 - [ ] **オキテ**: M2監修はレイがCEO暫定パス(decisions #023)。独立監修は依然歓迎: `products/p-001/00_structure.md`+`chapter-00.md`を第3条/第10条/免責十分性/執筆ルール波及性で監修し、赤入れがあれば products/p-001/ に**Writeツールで実コミット**するか handoff にレイ/ツヅリ宛てで残すこと(narration=書いたと報告するだけは不可。終了前に `git log --oneline -3 --author=オキテ` で自己検証)。
 

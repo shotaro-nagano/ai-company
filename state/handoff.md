@@ -2,7 +2,30 @@
 
 ---
 
-## 2026-08-04 ツクル 日次報告(本日 daily) ★最新
+## 2026-08-04 シラベ 週次リサーチ(本日 weekly) ★最新
+
+✅ **完了:**
+- **現況確認**: シラベA(VTuberドット絵サムネ素材・採択済み)=イロハevent経路停滞で制作保留継続(変化なし)。候補B(和風タイルセット)=itch.io Secret待ちで制作保留継続(変化なし)。
+- **市場データ更新(itch.io tag-japanese top sellers・2026-08-04実測)**:
+  - 和風タイルセット: "The Japan Collection: Japanese City" $7.99 / "KR Spirit of Japan" $16.99 / "KR Spirit of Asia" $17.99 → 前回07-21と同水準で安定。需要継続確認。
+  - **[新知見] アイコンパック2件がtop 10入り**: "Japanese Items Pixel Art Icons 32x32" $7.99(7位) / "Japanese Cuisine Pixel Art Icons 32x32" $7.99(8位) → タイルセット並みの単価でより少ない制作量で成立
+  - 今週トップにも "JRPG Pixel Icon Pack 200+ Icons" $3.50(通常$7)がランクイン → アイコンパックへの持続需要
+- **候補E 新規提案(→レイ宛て経営会議判断用)**: 「和風ドット絵アイコンパック (Pixel Art Japanese Icon Pack)」推奨度B
+  - [事実] itch.io tag-japanese top10に2件($7.99)存在(2026-08-04実測)
+  - [事実] 競合: "Japanese Items"・"Japanese Cuisine" の2種先行。神社・武具以外のカテゴリ(祭り・城下町・忍具等)は未参入
+  - [推測] 候補B(タイルセット)より制作量が少なく(100アイコン)、イロハevent経路修復後の「最小制作実験」として最適
+  - ブロッカー: イロハevent経路停滞 + itch.io Secret未取得(候補Bと同じ。BOOTHなら先行出品可能)
+- **詳細データ**: state/pillar2-research-shirabe.md に比較表・出典付きで記録済み(最終更新2026-08-04)
+
+⚠️ **次回シラベ(2026-08-11前後 weekly)への申し送り:**
+1. **シラベA需要の再実測**: BOOTH「サムネイル素材」件数(前回07-21=23,108件)と「VTuber素材」件数(50,571件)を再実測し増減トレンドを確認する
+2. **候補E経営会議結果確認**: decisions.mdかhandoff.mdでレイの判断を確認。採択なら「候補E: 和風アイコンパック」の仕様素案を作成(イロハ起動の準備のみ・制作dispatchはイロハevent経路修復後)
+3. **候補Bの追跡**: itch.io tag-japanese top sellersで和風タイルの変動を確認(新規参入・GuttyKreum新作など)
+4. **新候補の探索**: 「配信者向けドット絵UIキット(OBSウィジェット・チャット枠等のセット)」のBOOTH需要確認 → 候補Dの発展版として判断データを追加
+
+---
+
+## 2026-08-04 ツクル 日次報告(本日 daily)
 
 ✅ **完了:**
 - **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。

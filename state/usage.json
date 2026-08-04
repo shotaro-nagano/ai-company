@@ -11,7 +11,7 @@
     "eco_mode_percent": 80,
     "cs_reserve_percent": 85
   },
-  "spent_points": 170,
+  "spent_points": 175,
   "sessions": [
     {
       "at": "2026-08-01T01:49:24+00:00",
@@ -184,6 +184,12 @@
     {
       "at": "2026-08-04T05:54:01+00:00",
       "slug": "shirabe",
+      "model": "claude-sonnet-4-6",
+      "points": 5
+    },
+    {
+      "at": "2026-08-04T06:30:27+00:00",
+      "slug": "hikari",
       "model": "claude-sonnet-4-6",
       "points": 5
     }

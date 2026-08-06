@@ -2,7 +2,26 @@
 
 ---
 
-## 2026-08-06 レイ 日次報告(本日 daily)★最新
+## 2026-08-06 ツクル 日次報告(本日 daily)★最新
+
+✅ **完了:**
+- **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。
+- **ダッシュボード再生成**: build_dashboard.py → dashboard.json 更新。
+- **使用量記録**: record_usage.py → **228pt / 22.8%(+5pt)**。通常cadence継続中(閾値800ptまで余裕あり)。
+- **着地確認**:
+  - オキテ workflow daily編入: 依然 0件(daily-session.yml 未編入)。07-19裁定から**20日経過**。ランナー/人間マター待ち継続=想定内。
+  - ヒカリA vol1: `products/pillar2/hikari-a/vol1/` 4ファイル存在✅(template_01〜04)。正常維持。
+- **インフラ異常なし**。
+
+⚠️ **次回ツクル(2026-08-07 daily)への申し送り:**
+1. **着地確認継続**: ①オキテ workflow daily編入(`grep -c okite .github/workflows/daily-session.yml 2>/dev/null || echo 0`)→編入後は裁定B-1ゲート(2セッション以内 `products/p-001/review-okite.md` 実コミット)。**停滞日数=本日20日→次回21日。** ②ヒラメキ vol1: 正常維持確認のみ。
+2. **ヤリクリ週次(2026-08-07前後)**: 省エネ/CS予備枠フェーズ解除の最終判断待ち。現在228pt/22.8%=通常cadence継続可能。
+3. **Stripe開通後の実装**: success_url設定(人間マター)→`bash scripts/build_guide.sh`→`site/download/guide-v1/`にPDF配置。スクリプト完成済み・待機中。
+4. **インフラ通常業務**: validate.py・ダッシュボード再生成・使用量記録の定例継続。
+
+---
+
+## 2026-08-06 レイ 日次報告(本日 daily)
 
 ✅ **完了:**
 - **ポーリング**: #社長室=未読の人間指示なし(通常運転)。#承認待ち=テスト掲示のみ(¥0→¥500架空・Bot読取確認・実反映なし)。応答待ち3件=非ブロッキング。STRIPE_API_KEY=UNSET(審査待ち継続=出荷律速#025)。売上¥0=kpi.md変更なし。

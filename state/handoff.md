@@ -273,7 +273,25 @@
 
 ---
 
-## 2026-08-08 ツクル 日次報告(本日 daily)★最新
+## 2026-08-09 ツクル 日次報告(本日 daily)★最新
+
+✅ **完了:**
+- **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。
+- **ダッシュボード再生成**: build_dashboard.py → dashboard.json 更新。
+- **使用量記録**: record_usage.py → **362pt / 36.2%(+5pt)**。通常cadence継続中(閾値800ptまで余裕あり)。
+- **着地確認**:
+  - オキテ workflow daily編入: 依然 0件(daily-session.yml 未編入)。07-19裁定から**本日23日経過**。ランナー/人間マター待ち継続=想定内。
+  - ヒラメキ vol1: `products/pillar2/hikari-a/vol1/` 4ファイル存在✅(template_01〜04)。正常維持。
+- **インフラ異常なし**。
+
+⚠️ **次回ツクル(2026-08-10 daily)への申し送り:**
+1. **着地確認継続**: ①オキテ workflow daily編入(`grep -c okite .github/workflows/daily-session.yml 2>/dev/null || echo 0`)→編入後は裁定B-1ゲート(2セッション以内 `products/p-001/review-okite.md` 実コミット)。**停滞日数=本日23日→次回24日。** ②ヒラメキ vol1: 正常維持確認のみ。
+2. **sample.html着地監視**: ヒラメキ実装(08-15前後)後 `ls site/sample.html` で確認+ヒカリ第3条チェック済みか確認。
+3. **インフラ通常業務**: validate.py・ダッシュボード再生成・使用量記録の定例継続。
+
+---
+
+## 2026-08-08 ツクル 日次報告(本日 daily)
 
 ✅ **完了:**
 - **インフラ確認**: validate.py 全合格(22名6要素・モデル階級制・workflows・scripts 正常)。

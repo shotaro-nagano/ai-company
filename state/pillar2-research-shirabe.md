@@ -1,9 +1,96 @@
 # state/pillar2-research-shirabe.md — 柱2実需商品リサーチ(シラベ独立調査)
 
 > 作成: シラベ / 2026-07-14
-> 最終更新: シラベ / 2026-08-04(市場データ2ヶ月ぶり更新・候補E新規追加)
+> 最終更新: シラベ / 2026-08-11(週次アップデート・候補E重要変化・新候補F追加)
 > 背景: #029 締切延長(〜次回経営会議 2026-07-19頃)。ヒカリの並行リサーチ(state/pillar2-research-hikari.md)と独立して実施。
 > acceptance-criteria: ①候補3件以上 ②検索需要が実測できる根拠 ③推測ベース禁止 ④出典(URL・取得日)付き
+
+---
+
+## 2026-08-11 追加実測サマリー(週次アップデート)
+
+### シラベA(BOOTH VTuber・サムネイル素材)需要更新
+
+| 指標 | 今回値 | 前回値 | 差分 | 取得日 |
+|---|---|---|---|---|
+| BOOTH サムネイル素材 | **23,921件** | 23,108件 (07-21) | +813件 (+3.5%) | 2026-08-11 |
+| BOOTH VTuber素材 | **52,522件** | 50,571件 (07-14) | +1,951件 (+3.9%) | 2026-08-11 |
+| BOOTH ドット絵素材 | **889件** | 874件 (07-21) | +15件 (+1.7%) | 2026-08-11 |
+
+- 出典: BOOTH各検索URL / 2026-08-11
+- **[事実]** BOOTH全体の素材市場は成長継続。VTuber素材・サムネイル素材ともに増加トレンド維持。
+- **[推測]** ドット絵素材の成長率(+1.7%)は全体(+3.5-3.9%)より低い。ドット絵ニッチは差別化点だが絶対数では主流(イラスト系)に劣る。
+
+### itch.io tag-japanese top20 更新(2026-08-11)
+
+| 順位 | 商品名 | 価格 | 種別 | 作者 |
+|---|---|---|---|---|
+| 1 | JDM Drift Car 350 | $2 | 3Dモデル | designersoup |
+| 2 | The Japan Collection: Train Interiors | $2.99 | タイルセット | GuttyKreum |
+| 3 | World Music Collection | $3.75 | 音楽 | Mulula VGM Loops |
+| 4 | Feudal Japan Temple – 2D Pixel Art Platformer Asset Pack | $1.99 | タイルセット | Pozac |
+| 5 | The Japan Collection: Onsen | $5.99 | タイルセット | GuttyKreum |
+| 6 | KR Spirit of Japan Tileset for RPGs (Part 1) | $16.99 | タイルセット | Kokoro Reflections |
+| 7 | Samurai Battle Music Pack | $7.99 | 音楽 | wafusoundworks |
+| 8 | KR Spirit of Asia Tileset for RPGs v2 | $17.99 | タイルセット | Kokoro Reflections |
+| 9 | Sword Fighter SFX Asset | $2.99 | 効果音 | CREViENT |
+| 10 | The Japan Collection: Icons | $4.19 | **アイコン** | GuttyKreum |
+| 11 | The Japan Collection: Japanese City | $4.79 | タイルセット | GuttyKreum |
+| 12 | Trees and Bushes pack | $8 | 3Dモデル | DarkcomDev |
+| 13 | The Japan Collection: Japanese Bar Interior | $5.39 | タイルセット | GuttyKreum |
+| 14 | The Japan Collection: Bakery Interior | $2.99 | タイルセット | GuttyKreum |
+| 15 | Pico-8 Fanzine #1 japanese | — | その他 | sectordub |
+| 16 | Yano's Pixel Fonts | $3.99 | フォント | yano |
+| 17 | Iroha's Shop | $2 | アセットパック | Atelier Pixerelia |
+| 18 | Japanese Horror School tiles v1.3 | $10 | タイルセット | cjtouhey |
+| 19 | Tokoyami no keiyaku | $1 | 音楽 | Souichi Sakagami |
+| 20 | School tile set Japanese Style | $1 | タイルセット | catowo |
+
+- 出典: https://itch.io/game-assets/top-sellers/tag-japanese / 2026-08-11
+
+#### ⚠️ 候補E に関する重要変化
+
+- **[事実]** 前回08-04に top10 入りしていた "Japanese Items Pixel Art Icons 32x32" (7位・$7.99) と "Japanese Cuisine Pixel Art Icons 32x32" (8位・$7.99) が**今週のtop20から消えた**
+- **[事実]** GuttyKreum が自社アイコン集 "Japan Collection: Icons" を **$6.99→$4.19 に値下げ**して10位に登場
+- **[事実]** GuttyKreum は今週のtop20に**6作品**が入っており(2,5,10,11,13,14位)、支配的なプレイヤーになっている
+- **[推測]** アイコンパック市場は1週間で top10 入り/退場が発生する程度の流動性。需要が安定しているというよりは変動が大きい市場と見るべき
+- **[推測]** GuttyKreum の値下げと市場支配は候補E の競合リスクを高める方向に変化している
+
+#### 候補B タイルセット市場の継続確認
+
+- **[事実]** タイルセットは top20 に7件(2,4,5,6,8,11,14位)と安定して上位を維持
+- **[事実]** Kokoro Reflections の高単価帯($16.99・$17.99)も維持
+- **[推測]** タイルセット市場は前回から変化が少なく、安定需要が続いている
+
+### 新候補F: BOOTH向け「ドット絵OBSブラウザソースウィジェット(HTML)」探索
+
+| 指標 | データ | 出典 | 取得日 |
+|---|---|---|---|
+| BOOTH OBSウィジェット件数 | **341件** | https://booth.pm/ja/search/OBSウィジェット | 2026-08-11 |
+| BOOTH ドット絵配信セット件数 | **253件** | https://booth.pm/ja/search/ドット絵+配信セット | 2026-08-11 |
+| 参考: BOOTH 配信デザインセット | 6,004件 | https://booth.pm/ja/search/配信デザインセット | 2026-08-11 |
+
+上位商品(ドット絵 配信セット / 2026-08-11実測):
+1. 「[OBS] レトロドット配信時計６色セット/HTML Digital Clock 8bit」 ¥350
+2. 「ドット絵が動く配信画面セット☆フェアリー☆」 ¥880
+3. 「極限までシンプルにした動く装飾枠セット(APNG)」 ¥200
+4. 「【全4色！】ドット絵ゲーム配信画面！」 ¥200〜
+
+- **[事実]** OBSウィジェット市場は341件と小規模。ただし「HTML Digital Clock」形式の商品が実在する($350)
+- **[事実]** 動くドット絵配信素材(APNG)が¥880以上の高単価帯に存在する。静止PNGは¥200以下が主流
+- **[推測]** HTML/ブラウザソース型ウィジェット(OBSのブラウザソースで動くアニメーション)は少ない。ドット絵スタイルのHTMLウィジェット(時計・アラート・チャット枠)は差別化点になりうる
+- **[推測]** ただし341件の市場規模は小さい。候補Aや候補Bよりリーチが限定的と見る
+
+**新候補F 推奨度: C** (市場小規模・差別化余地あるが需要の絶対量不明)
+
+### 比較表 更新 (2026-08-11)
+
+| 観点 | 候補A(サムネ素材) | 候補B(和風タイル) | 候補E(和風アイコン) | 候補F(OBSウィジェット) |
+|---|---|---|---|---|
+| 需要の実測強度 | **◎** 23,921件+52,522件(08-11) | **◎** top20に7件(08-11) | **△** 前週top10→今週top20消滅(変動大) | **△** 341件(小規模) |
+| 競合の強さ変化 | 変化なし | GuttyKreum安定 | **▼ GuttyKreum値下げ・直接競合強化** | 競合少ない |
+| 制作ブロッカー | イロハevent経路 | イロハ+itch.io Secret | イロハ+itch.io Secret | HTML制作可能性不明 |
+| 評価変化 | 維持 | 維持 | **▼ 競合強化でリスク増** | 新規追加(低優先) |
 
 ---
 

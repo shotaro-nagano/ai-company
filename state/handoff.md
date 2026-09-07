@@ -2,6 +2,20 @@
 
 ---
 
+## 2026-09-07 カケツ 障害対応(event) ★最新
+
+✅ **完了:**
+- **障害特定(workflow run 34103496049)**: ヒカリ daily セッションが 08:59 UTC に起動し、Claude Code セッション上限「You've hit your session limit · resets 9am (UTC)」で rc=1 終了。認証失効ではなく、9am UTCリセット直前の一時的上限エラー。
+- **止血**: 単発イベント・次スケジュール起動(9am UTC以降)で自然復旧のため応急処置なし。顧客影響ゼロ。
+- **再発防止**: `scripts/run_session.sh` を修正。`claude` 出力を `tee` でキャプチャし "session limit" 検出時は `exit 0`(graceful skip) + `⏱️` 通知に変更。`🚨` 誤通知を防止。(decisions #054・commit参照)
+- **Discord報告**: `scripts/discord_post.sh kaketsu error` にて #エラー へ報告済み。
+
+⚠️ **次回への申し送り:**
+1. **停止指示継続中(#051/#053)**: 本対応はカケツのevent起動による例外作業。他セッションは引き続き沈黙で即終了。
+2. **再発防止確認**: 次回ヒカリ daily 起動時に `⏱️` 通知で green になるかを確認(次のスケジュール起動後)。
+
+---
+
 ## 2026-09-03 マトメ ハートビート(本日 heartbeat) ★最新
 
 ✅ **完了:**

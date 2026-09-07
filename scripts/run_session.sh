@@ -113,9 +113,21 @@ esac
 
 echo "[run_session] $SLUG model=$MODEL effort=${EFFORT:-default} class=$CLASS"
 set +e
-claude "${CLAUDE_ARGS[@]}" "$PROMPT"
-CLAUDE_RC=$?
+CLAUDE_OUTPUT_TMP=$(mktemp)
+claude "${CLAUDE_ARGS[@]}" "$PROMPT" 2>&1 | tee "$CLAUDE_OUTPUT_TMP"
+CLAUDE_RC=${PIPESTATUS[0]}
 set -e
+
+# セッション上限エラーの graceful skip
+# "session limit" メッセージが出た場合はエラーではなくスキップ扱い(次回スケジュールで自動リトライ)
+if [ "$CLAUDE_RC" -ne 0 ] && grep -q "session limit" "$CLAUDE_OUTPUT_TMP" 2>/dev/null; then
+  echo "[run_session] Claude Code session limit reached — treating as non-fatal skip" >&2
+  "$SCRIPT_DIR/discord_post.sh" kaketsu error \
+    "⏱️ ${SLUG}: Claude Code セッション上限に達しました(resets 9am UTC)。次回スケジュール起動で自動リトライします。顧客影響なし・非致命的。" || true
+  rm -f "$CLAUDE_OUTPUT_TMP"
+  exit 0
+fi
+rm -f "$CLAUDE_OUTPUT_TMP"
 
 # --- 使用量記録(失敗しても枠は消費している) ---
 python3 "$SCRIPT_DIR/record_usage.py" "$SLUG" "$MODEL"

@@ -11,7 +11,7 @@
     "eco_mode_percent": 80,
     "cs_reserve_percent": 85
   },
-  "spent_points": 721,
+  "spent_points": 726,
   "sessions": [
     {
       "at": "2026-09-01T00:54:27+00:00",
@@ -862,6 +862,12 @@
     {
       "at": "2026-09-21T06:48:03+00:00",
       "slug": "tsukuru",
+      "model": "claude-sonnet-4-6",
+      "points": 5
+    },
+    {
+      "at": "2026-09-21T08:35:01+00:00",
+      "slug": "kazoe",
       "model": "claude-sonnet-4-6",
       "points": 5
     }

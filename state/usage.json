@@ -360,6 +360,12 @@
       "slug": "hirome",
       "model": "claude-haiku-4-5",
       "points": 1
+    },
+    {
+      "at": "2026-10-09T00:00:00+00:00",
+      "slug": "matome",
+      "model": "claude-haiku-4-5",
+      "points": 1
     }
   ]
 }

@@ -11,7 +11,7 @@
     "eco_mode_percent": 80,
     "cs_reserve_percent": 85
   },
-  "spent_points": 575,
+  "spent_points": 576,
   "sessions": [
     {
       "at": "2026-10-08T01:00:00+00:00",
@@ -708,6 +708,12 @@
       "slug": "yomi",
       "model": "claude-sonnet-4-6",
       "points": 5
+    },
+    {
+      "at": "2026-10-17T10:04:18+00:00",
+      "slug": "hirome",
+      "model": "claude-haiku-4-5",
+      "points": 1
     }
   ]
 }

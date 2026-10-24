@@ -11,7 +11,7 @@
     "eco_mode_percent": 80,
     "cs_reserve_percent": 85
   },
-  "spent_points": 761,
+  "spent_points": 762,
   "sessions": [
     {
       "at": "2026-10-20T00:00:00+00:00",
@@ -946,6 +946,12 @@
     {
       "at": "2026-10-23T10:57:22+00:00",
       "slug": "hirome",
+      "model": "claude-haiku-4-5",
+      "points": 1
+    },
+    {
+      "at": "2026-10-24T00:08:44+00:00",
+      "slug": "matome",
       "model": "claude-haiku-4-5",
       "points": 1
     }

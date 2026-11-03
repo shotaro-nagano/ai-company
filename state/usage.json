@@ -11,7 +11,7 @@
     "eco_mode_percent": 80,
     "cs_reserve_percent": 85
   },
-  "spent_points": 95,
+  "spent_points": 100,
   "sessions": [
     {
       "at": "2026-11-01T00:33:33+00:00",
@@ -108,6 +108,12 @@
       "slug": "matome",
       "model": "claude-haiku-4-5",
       "points": 1
+    },
+    {
+      "at": "2026-11-03T03:09:13+00:00",
+      "slug": "kaketsu",
+      "model": "claude-sonnet-4-6",
+      "points": 5
     }
   ]
 }
